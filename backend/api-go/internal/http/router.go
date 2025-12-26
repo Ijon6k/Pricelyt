@@ -4,12 +4,14 @@ import (
 	"net/http"
 
 	"api/internal/health"
+
+	"github.com/jmoiron/sqlx"
 )
 
-func NewRouter() http.Handler {
+func NewRouter(db *sqlx.DB) http.Handler {
 	mux := http.NewServeMux()
 
-	mux.HandleFunc("/health", health.Handler)
+	mux.HandleFunc("/health", health.Handler(db))
 
 	return mux
 }

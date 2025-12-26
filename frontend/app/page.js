@@ -11,7 +11,8 @@ export default async function Home() {
 
       <h2>Messages from workers:</h2>
       <ul>
-        <strong>status {data.status}</strong>
+        <strong>status: {data.status}</strong>
+        <strong> database :{data.database}</strong>
       </ul>
     </main>
   );
