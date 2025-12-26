@@ -3,11 +3,11 @@ version: "3.9"
 services:
   postgres:
     image: postgres:16
-    container_name: project_postgres
+    container_name: pricelyt_postgres
     environment:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
-      POSTGRES_DB: project_db
+      POSTGRES_DB: pricelyt_db
     ports:
       - "5432:5432"
     volumes:
@@ -15,9 +15,10 @@ services:
 
   worker1:
     build: ./backend/worker-python
-    container_name: project_worker_1
+    container_name: pricelyt_worker_1
     environment:
       WORKER_ID: "1"
+      DATABASE_URL: postgres://postgres:postgres@postgres:5432/pricelyt_db
     ports:
       - "8001:8000"
     depends_on:
@@ -25,8 +26,9 @@ services:
 
   worker2:
     build: ./backend/worker-python
-    container_name: project_worker_2
+    container_name: pricelyt_worker_2
     environment:
+      DATABASE_URL: postgres://postgres:postgres@postgres:5432/pricelyt_db
       WORKER_ID: "2"
     ports:
       - "8002:8000"

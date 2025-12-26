@@ -1,5 +1,5 @@
 export default async function Home() {
-  const res = await fetch("http://localhost:8080/hello", {
+  const res = await fetch("http://localhost:8080/health", {
     cache: "no-store",
   });
 
@@ -11,11 +11,7 @@ export default async function Home() {
 
       <h2>Messages from workers:</h2>
       <ul>
-        {data.map((item, i) => (
-          <li key={i}>
-            <strong>Worker {item.worker}:</strong> {item.message}
-          </li>
-        ))}
+        <strong>status {data.status}</strong>
       </ul>
     </main>
   );
