@@ -15,7 +15,7 @@ func (r *Repository) FindAll() ([]Tracker, error) {
 	var trackers []Tracker
 
 	query := `
-        SELECT id, keyword, status, created_at
+        SELECT id, keyword, status, created_at, view_count
         FROM trackers
         ORDER BY created_at DESC
     `
@@ -32,7 +32,7 @@ func (r *Repository) FindByID(id string) (*Tracker, error) {
 	var t Tracker
 
 	query := `
-		SELECT id, keyword, status, created_at
+		SELECT id, keyword, status, created_at, view_count
 		FROM trackers
 		WHERE id = $1
 		LIMIT 1
@@ -43,4 +43,14 @@ func (r *Repository) FindByID(id string) (*Tracker, error) {
 	}
 
 	return &t, nil
+}
+
+func (r *Repository) IncrementViewCount(id string) error {
+	query := `
+		UPDATE trackers
+		SET view_count = view_count + 1
+		WHERE id = $1
+	`
+	_, err := r.db.Exec(query, id)
+	return err
 }

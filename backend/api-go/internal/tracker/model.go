@@ -8,4 +8,5 @@ type Tracker struct {
 	Keyword   string    `db:"keyword" json:"keyword"`
 	Status    string    `db:"status" json:"status"`
 	CreatedAt time.Time `db:"created_at" json:"created_at"`
+	ViewCount int       `db:"view_count" json:"view_count"`
 }

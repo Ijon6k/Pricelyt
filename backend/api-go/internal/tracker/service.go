@@ -15,5 +15,10 @@ func (s *Service) ListTrackers() ([]Tracker, error) {
 }
 
 func (s *Service) GetTrackerByID(id string) (*Tracker, error) {
+	if err := s.repo.IncrementViewCount(id); err != nil {
+		return nil, err
+	}
+
 	return s.repo.FindByID(id)
+
 }
