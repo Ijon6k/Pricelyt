@@ -1,3 +1,3 @@
 # Pricelyt
 
-Search-driven price & news intelligence system
+Search-driven price & news intelligence system (kinda)
