@@ -1,5 +1,3 @@
-version: "3.9"
-
 services:
   postgres:
     image: postgres:16
@@ -13,27 +11,15 @@ services:
     volumes:
       - pgdata:/var/lib/postgresql/data
 
-  worker1:
-    build: ./backend/worker-python
-    container_name: pricelyt_worker_1
-    environment:
-      WORKER_ID: "1"
-      DATABASE_URL: postgres://postgres:postgres@postgres:5432/pricelyt_db
-    ports:
-      - "8001:8000"
-    depends_on:
-      - postgres
-
-  worker2:
-    build: ./backend/worker-python
-    container_name: pricelyt_worker_2
+  scraper:
+    build: ./backend/worker-python/scraper
+    volumes:
+      - ./backend/worker-python/scraper:/app
     environment:
       DATABASE_URL: postgres://postgres:postgres@postgres:5432/pricelyt_db
-      WORKER_ID: "2"
-    ports:
-      - "8002:8000"
     depends_on:
       - postgres
+    restart: unless-stopped
 
 volumes:
   pgdata:
