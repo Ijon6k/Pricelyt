@@ -18,8 +18,10 @@ func NewRouter(db *sqlx.DB) http.Handler {
 	repo := tracker.NewRepository(db)
 	service := tracker.NewService(repo)
 	handler := tracker.NewHandler(service)
-
+	//list trackers
 	mux.HandleFunc("/trackers", handler.GetTrackers)
+
+	mux.HandleFunc("/trackers/", handler.GetTrackerByID)
 
 	return mux
 }

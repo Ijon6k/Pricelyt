@@ -13,3 +13,7 @@ func NewService(repo *Repository) *Service {
 func (s *Service) ListTrackers() ([]Tracker, error) {
 	return s.repo.FindAll()
 }
+
+func (s *Service) GetTrackerByID(id string) (*Tracker, error) {
+	return s.repo.FindByID(id)
+}

@@ -27,3 +27,20 @@ func (r *Repository) FindAll() ([]Tracker, error) {
 
 	return trackers, nil
 }
+
+func (r *Repository) FindByID(id string) (*Tracker, error) {
+	var t Tracker
+
+	query := `
+		SELECT id, keyword, status, created_at
+		FROM trackers
+		WHERE id = $1
+		LIMIT 1
+	`
+
+	if err := r.db.Get(&t, query, id); err != nil {
+		return nil, err
+	}
+
+	return &t, nil
+}
