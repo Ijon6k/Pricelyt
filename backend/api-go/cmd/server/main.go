@@ -13,7 +13,7 @@ import (
 
 func main() {
 	// load .env (safe: ignore error di production)
-	_ = godotenv.Load("")
+	_ = godotenv.Load("../../.env")
 
 	port := os.Getenv("APP_PORT")
 	if port == "" {

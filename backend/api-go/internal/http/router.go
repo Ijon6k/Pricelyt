@@ -1,9 +1,9 @@
 package http
 
 import (
-	"net/http"
-
 	"api/internal/health"
+	"api/internal/tracker"
+	"net/http"
 
 	"github.com/jmoiron/sqlx"
 )
@@ -11,7 +11,15 @@ import (
 func NewRouter(db *sqlx.DB) http.Handler {
 	mux := http.NewServeMux()
 
+	// health
 	mux.HandleFunc("/health", health.Handler(db))
+
+	// tracker
+	repo := tracker.NewRepository(db)
+	service := tracker.NewService(repo)
+	handler := tracker.NewHandler(service)
+
+	mux.HandleFunc("/trackers", handler.GetTrackers)
 
 	return mux
 }
