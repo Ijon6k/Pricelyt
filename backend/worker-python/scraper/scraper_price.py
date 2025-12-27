@@ -95,7 +95,7 @@ async def scrape_price(keyword: str) -> Optional[Dict]:
 
         median_price = int(statistics.median(prices))
 
-        # market price = trimmed mean (buang 20% atas & bawah)
+        # market price = trimmed mean buang 20% atas & bawah
         trim = max(1, len(prices) // 5)
         trimmed = prices[trim:-trim] if len(prices) > 5 else prices
         market_price = int(sum(trimmed) / len(trimmed))

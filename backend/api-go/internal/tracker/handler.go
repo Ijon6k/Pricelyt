@@ -26,7 +26,6 @@ func (h *Handler) GetTrackers(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *Handler) GetTrackerByID(w http.ResponseWriter, r *http.Request) {
-	// Path: /trackers/{id}
 	parts := strings.Split(strings.Trim(r.URL.Path, "/"), "/")
 	if len(parts) != 2 {
 		http.NotFound(w, r)
@@ -35,12 +34,12 @@ func (h *Handler) GetTrackerByID(w http.ResponseWriter, r *http.Request) {
 
 	id := parts[1]
 
-	tracker, err := h.service.GetTrackerByID(id)
+	trackerDetail, err := h.service.GetTrackerDetailByID(id)
 	if err != nil {
-		http.Error(w, "tracker not found", http.StatusNotFound)
+		http.Error(w, "tracker not found or error fetching data", http.StatusNotFound)
 		return
 	}
 
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(tracker)
+	json.NewEncoder(w).Encode(trackerDetail)
 }

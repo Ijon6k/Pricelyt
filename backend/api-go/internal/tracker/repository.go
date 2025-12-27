@@ -2,7 +2,6 @@ package tracker
 
 import "github.com/jmoiron/sqlx"
 
-// Repository bertanggung jawab akses data trackers
 type Repository struct {
 	db *sqlx.DB
 }
@@ -53,4 +52,30 @@ func (r *Repository) IncrementViewCount(id string) error {
 	`
 	_, err := r.db.Exec(query, id)
 	return err
+}
+
+func (r *Repository) FindPriceLogs(trackerID string) ([]PriceLog, error) {
+	var logs []PriceLog
+	query := `
+		SELECT id, market_price, min_price, max_price, median_price, sample_count, scraped_at
+		FROM price_logs
+		WHERE tracker_id = $1
+		ORDER BY scraped_at ASC
+	`
+	err := r.db.Select(&logs, query, trackerID)
+	return logs, err
+}
+
+// FindNewsLogs mengambil berita berdasarkan tracker_id
+func (r *Repository) FindNewsLogs(trackerID string) ([]NewsLog, error) {
+	var logs []NewsLog
+	query := `
+		SELECT id, title, source_url, content, is_blocked, scraped_at
+		FROM news_logs
+		WHERE tracker_id = $1
+		ORDER BY scraped_at DESC
+		LIMIT 50
+	`
+	err := r.db.Select(&logs, query, trackerID)
+	return logs, err
 }

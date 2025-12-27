@@ -1,4 +1,3 @@
-# queries.py
 SQL_PICK_ELIGIBLE = """
 SELECT id, keyword
 FROM trackers

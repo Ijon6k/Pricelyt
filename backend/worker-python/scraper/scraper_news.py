@@ -10,7 +10,7 @@ ARTICLE_TIMEOUT_MS = 8000
 
 logger = logging.getLogger("scraper.news")
 
-# domain berat / bermasalah → skip langsung
+# domain berat
 BLOCKED_DOMAINS = {
     "msn.com",
     "www.msn.com",
@@ -51,7 +51,6 @@ async def scrape_news(keyword: str):
                 timeout=20000,
             )
 
-            # ❗ selector TIDAK BOLEH fatal
             try:
                 await page.wait_for_selector("a.title", timeout=6000)
             except Exception:

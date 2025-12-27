@@ -1,8 +1,6 @@
-# worker.py
 import asyncio
 import logging
 import time
-from tkinter import SW
 
 from db import get_conn
 from psycopg2.sql import SQL
@@ -12,6 +10,7 @@ from queries import (
     SQL_MARK_ERROR,
     SQL_MARK_PROCESSING,
     SQL_MARK_READY,
+    SQL_PICK_ELIGIBLE,
 )
 from scraper_news import scrape_news
 from scraper_price import scrape_price
@@ -77,6 +76,55 @@ def mark_error(tracker_id, code, message):
     conn.close()
 
 
+def insert_price_logs(tracker_id, price_result):
+    conn = get_conn()
+    try:
+        with conn.cursor() as cur:
+            cur.execute(
+                SQL_INSERT_PRICE_LOG,
+                (
+                    tracker_id,
+                    price_result["market_price"],
+                    price_result["min_price"],
+                    price_result["max_price"],
+                    price_result["median_price"],
+                    price_result["count"],
+                ),
+            )
+        conn.commit()
+    except Exception:
+        conn.rollback()
+        raise
+    finally:
+        conn.close()
+
+
+def insert_news_logs(tracker_id, news_items):
+    if not news_items:
+        return
+
+    conn = get_conn()
+    try:
+        with conn.cursor() as cur:
+            for item in news_items:
+                cur.execute(
+                    SQL_INSERT_NEWS_LOG,
+                    (
+                        tracker_id,
+                        item["title"],
+                        item["source_url"],
+                        item["content"],
+                        item["is_blocked"],
+                    ),
+                )
+        conn.commit()
+    except Exception:
+        conn.rollback()
+        raise
+    finally:
+        conn.close()
+
+
 # ---------------- main loop ----------------
 
 
@@ -118,9 +166,8 @@ def run():
                 len(news_result),
             )
 
-            # 🔜 nanti:
-            # insert_price_logs(tracker_id, price_result)
-            # insert_news_logs(tracker_id, news_result)
+            insert_price_logs(tracker_id, price_result)
+            insert_news_logs(tracker_id, news_result)
 
             mark_ready(tracker_id)
 
