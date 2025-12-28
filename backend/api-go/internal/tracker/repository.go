@@ -31,11 +31,13 @@ func (r *Repository) FindByID(id string) (*Tracker, error) {
 	var t Tracker
 
 	query := `
-		SELECT id, keyword, status, created_at, view_count
-		FROM trackers
-		WHERE id = $1
-		LIMIT 1
-	`
+        SELECT
+            id, keyword, status, created_at, view_count,
+            error_count, last_error_code, last_error_message, last_error_at
+        FROM trackers
+        WHERE id = $1
+        LIMIT 1
+    `
 
 	if err := r.db.Get(&t, query, id); err != nil {
 		return nil, err
@@ -66,7 +68,6 @@ func (r *Repository) FindPriceLogs(trackerID string) ([]PriceLog, error) {
 	return logs, err
 }
 
-// FindNewsLogs mengambil berita berdasarkan tracker_id
 func (r *Repository) FindNewsLogs(trackerID string) ([]NewsLog, error) {
 	var logs []NewsLog
 	query := `

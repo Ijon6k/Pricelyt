@@ -1,159 +1,197 @@
-# scraper_news.py
 import asyncio
 import logging
+import random
+from datetime import datetime
 from urllib.parse import urlparse
 
 from browser_factory import create_browser
 
-MAX_NEWS_PER_SCRAPE = 10
-ARTICLE_TIMEOUT_MS = 8000
+MAX_NEWS_TOTAL = 10
+ARTICLE_TIMEOUT_MS = 20000
 
 logger = logging.getLogger("scraper.news")
 
-# domain berat
-BLOCKED_DOMAINS = {
-    "msn.com",
-    "www.msn.com",
+# Domain yang bukan berita artikel
+IGNORED_DOMAINS = {
+    "youtube.com",
+    "facebook.com",
+    "twitter.com",
+    "reddit.com",
+    "instagram.com",
+    "tiktok.com",
+    "amazon.com",
+    "ebay.com",
+    "pinterest.com",
 }
 
 
-def is_blocked_domain(url: str) -> bool:
+def is_valid_domain(url: str) -> bool:
     try:
         domain = urlparse(url).netloc.lower()
-        return any(b in domain for b in BLOCKED_DOMAINS)
+        return not any(ign in domain for ign in IGNORED_DOMAINS)
     except Exception:
-        return True
+        return False
+
+
+def get_current_year():
+    return str(datetime.now().year)
+
+
+async def scrape_bing_news(page, keyword):
+    """
+    Mengambil berita dari Bing News dengan filter tahun berjalan.
+    """
+    year = get_current_year()
+    # Query dibuat simpel agar hasil maksimal
+    query = f"{keyword} news {year}"
+
+    logger.info(f"Searching Bing News for '{query}'...")
+    # qdr=y -> Past Year (Berita setahun terakhir agar tidak basi)
+    url = f"https://www.bing.com/news/search?q={query}&qdr=y"
+
+    try:
+        await page.goto(url, wait_until="domcontentloaded", timeout=30000)
+        await asyncio.sleep(2)  # Beri waktu Bing merender list berita
+
+        links = await page.evaluate("""
+            () => {
+                const results = [];
+                // Selector utama Bing News
+                const cards = document.querySelectorAll('div.news-card');
+                cards.forEach(card => {
+                    const anchor = card.querySelector('a.title');
+                    if (anchor && anchor.href) {
+                        results.push({
+                            title: anchor.innerText.trim(),
+                            link: anchor.href
+                        });
+                    }
+                });
+
+                // Fallback selector jika layout berbeda
+                if (results.length === 0) {
+                    const anchors = document.querySelectorAll('a.title');
+                    anchors.forEach(a => {
+                        if (a.href && a.innerText.trim().length > 10) {
+                            results.push({
+                                title: a.innerText.trim(),
+                                link: a.href
+                            });
+                        }
+                    });
+                }
+                return results.slice(0, 15);
+            }
+        """)
+        return links
+    except Exception as e:
+        logger.warning(f"Bing News error: {e}")
+        return []
+
+
+async def fetch_article_content(page, url):
+    """
+    Mengambil isi artikel dengan mode hemat bandwidth.
+    """
+    content = ""
+    is_blocked = False
+
+    try:
+        await page.set_extra_http_headers(
+            {"Referer": "https://www.bing.com/", "Upgrade-Insecure-Requests": "1"}
+        )
+
+        await page.goto(url, wait_until="domcontentloaded", timeout=ARTICLE_TIMEOUT_MS)
+
+        # Ekstrak paragraf
+        paragraphs = await page.query_selector_all("p")
+        if len(paragraphs) >= 2:
+            texts = [await p.inner_text() for p in paragraphs[:8]]
+            content = " ".join(texts).strip()
+        else:
+            # Fallback body text jika tidak pakai tag <p>
+            content = await page.evaluate("document.body.innerText")
+            content = content[:800].replace("\n", " ")
+
+        # Deteksi WAF/Captcha
+        block_triggers = [
+            "verify you are a human",
+            "access denied",
+            "security check",
+            "captcha",
+            "cloudflare",
+        ]
+        if any(bt in content.lower() for bt in block_triggers):
+            is_blocked = True
+            content = "Blocked by WAF"
+
+    except Exception:
+        pass
+
+    return content, is_blocked
 
 
 async def scrape_news(keyword: str):
     logger.info("start news scrape keyword=%s", keyword)
 
-    queries = [
-        f"{keyword} price trend",
-        f"{keyword} market analysis",
-        f"{keyword} hardware news",
-    ]
-
     p, browser, page = await create_browser()
-    results = []
+    final_results = []
+    seen_urls = set()
 
     try:
-        for query in queries:
-            if len(results) >= MAX_NEWS_PER_SCRAPE:
-                break
-
-            logger.info("searching news query='%s'", query)
-
-            search_url = f"https://www.bing.com/news/search?q={query}"
-            await page.goto(
-                search_url,
-                wait_until="domcontentloaded",
-                timeout=20000,
-            )
-
-            try:
-                await page.wait_for_selector("a.title", timeout=6000)
-            except Exception:
-                logger.warning("no news result rendered for query='%s'", query)
-                continue
-
-            await asyncio.sleep(1)
-
-            # ambil DATA MENTAH, bukan element
-            links = await page.evaluate("""
-                () => Array.from(document.querySelectorAll("a.title"))
-                    .slice(0, 12)
-                    .map(a => ({
-                        title: a.innerText.trim(),
-                        link: a.href
-                    }))
-            """)
-
-            logger.info(
-                "found %d candidate articles for query='%s'",
-                len(links),
-                query,
-            )
-
-            for item in links:
-                if len(results) >= MAX_NEWS_PER_SCRAPE:
-                    break
-
-                href = item.get("link")
-                title = item.get("title")
-
-                if not href or not title:
-                    continue
-
-                if is_blocked_domain(href):
-                    logger.info("skip blocked domain %s", href)
-                    continue
-
-                if any(r["source_url"] == href for r in results):
-                    continue
-
-                article_page = await browser.new_page()
-
-                try:
-                    logger.info("fetching article %s", href)
-
-                    try:
-                        await article_page.goto(
-                            href,
-                            wait_until="domcontentloaded",
-                            timeout=ARTICLE_TIMEOUT_MS,
-                        )
-                    except Exception:
-                        logger.warning("timeout fetching article %s", href)
-                        continue
-
-                    await asyncio.sleep(0.8)
-
-                    paragraphs = await article_page.query_selector_all("p")
-                    content = " ".join(
-                        [await p.inner_text() for p in paragraphs[:5]]
-                    ).strip()
-
-                    is_blocked = any(
-                        kw in content.lower() for kw in ["verify", "captcha", "human"]
-                    )
-
-                    if is_blocked:
-                        logger.warning("article blocked by WAF %s", href)
-
-                    results.append(
-                        {
-                            "title": title[:255],
-                            "source_url": href,
-                            "content": None if is_blocked else content,
-                            "is_blocked": is_blocked,
-                        }
-                    )
-
-                except Exception:
-                    logger.exception("unexpected error fetching article")
-
-                finally:
-                    try:
-                        await article_page.close()
-                    except Exception:
-                        pass
-
-        logger.info(
-            "news scrape done keyword=%s total=%d",
-            keyword,
-            len(results),
+        # OPTIMASI: Matikan resource berat untuk semua tahap
+        await page.route(
+            "**/*",
+            lambda route: route.abort()
+            if route.request.resource_type in ["image", "media", "font", "stylesheet"]
+            else route.continue_(),
         )
 
-        return results
+        # 1. Ambil kandidat hanya dari Bing
+        candidates = await scrape_bing_news(page, keyword)
+
+        if not candidates:
+            logger.warning("No news candidates found from Bing.")
+            return []
+
+        logger.info(f"Found {len(candidates)} candidates. Fetching details...")
+
+        random.shuffle(candidates)
+
+        for item in candidates:
+            if len(final_results) >= MAX_NEWS_TOTAL:
+                break
+
+            url = item["link"]
+            if url in seen_urls or not is_valid_domain(url):
+                continue
+            seen_urls.add(url)
+
+            # Gunakan tab yang sama (page) untuk fetch artikel agar hemat RAM
+            content, is_blocked = await fetch_article_content(page, url)
+
+            if is_blocked or not content or len(content) < 60:
+                continue
+
+            final_results.append(
+                {
+                    "title": item["title"],
+                    "source_url": url,
+                    "content": content,
+                    "is_blocked": False,
+                }
+            )
 
     finally:
-        # cleanup TIDAK BOLEH bikin error baru
         try:
-            await browser.close()
-        except Exception:
+            if page:
+                await page.close()
+            if browser:
+                await browser.close()
+            if p:
+                await p.stop()
+        except:
             pass
-        try:
-            await p.stop()
-        except Exception:
-            pass
+
+    logger.info(f"News Scrape DONE. Saved {len(final_results)} articles.")
+    return final_results

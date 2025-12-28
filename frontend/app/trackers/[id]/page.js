@@ -1,3 +1,4 @@
+import Link from "next/link"; // 1. Import component Link
 import { fetchTrackerDetail } from "@/app/lib/api";
 
 export default async function TrackerDetailPage({ params }) {
@@ -22,6 +23,16 @@ export default async function TrackerDetailPage({ params }) {
   return (
     <main className="bg-gray-50 min-h-screen py-8">
       <div className="mx-auto max-w-5xl px-4 space-y-8">
+        {/* --- 2. BUTTON BACK TO HOME --- */}
+        <div>
+          <Link
+            href="/"
+            className="inline-block px-4 py-2 bg-white border border-gray-300 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-100 transition-colors"
+          >
+            &larr; Back to Home
+          </Link>
+        </div>
+
         {/* --- SECTION 1: HEADER & RAW INFO --- */}
         <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
           <div className="flex justify-between items-start">
