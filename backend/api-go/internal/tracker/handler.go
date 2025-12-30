@@ -9,6 +9,9 @@ import (
 type Handler struct {
 	service *Service
 }
+type AddTrackerRequest struct {
+	Keyword string `json:"keyword"`
+}
 
 func NewHandler(service *Service) *Handler {
 	return &Handler{service: service}
@@ -42,4 +45,21 @@ func (h *Handler) GetTrackerByID(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(trackerDetail)
+}
+
+func (h *Handler) AddTracker(w http.ResponseWriter, r *http.Request) {
+	var req AddTrackerRequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		http.Error(w, "Wrong Format Json", http.StatusBadRequest)
+	}
+
+	result, err := h.service.AddTracker(r.Context(), req.Keyword)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusCreated)
+	json.NewEncoder(w).Encode(result)
 }

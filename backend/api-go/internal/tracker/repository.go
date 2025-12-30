@@ -1,6 +1,10 @@
 package tracker
 
-import "github.com/jmoiron/sqlx"
+import (
+	"context"
+
+	"github.com/jmoiron/sqlx"
+)
 
 type Repository struct {
 	db *sqlx.DB
@@ -79,4 +83,20 @@ func (r *Repository) FindNewsLogs(trackerID string) ([]NewsLog, error) {
 	`
 	err := r.db.Select(&logs, query, trackerID)
 	return logs, err
+}
+
+func (r *Repository) AddTracker(ctx context.Context, keyword string) (*Tracker, error) {
+	var t Tracker
+	query := `
+		INSERT INTO trackers (keyword, status)
+		VALUES ($1, 'PENDING')
+		RETURNING id, keyword, status,created_at, view_count	`
+
+	err := r.db.QueryRowContext(ctx, query, keyword).Scan(&t.ID, &t.Keyword, &t.Status, &t.CreatedAt, &t.ViewCount)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return &t, nil
 }

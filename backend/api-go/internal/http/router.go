@@ -12,16 +12,15 @@ func NewRouter(db *sqlx.DB) http.Handler {
 	mux := http.NewServeMux()
 
 	// health
-	mux.HandleFunc("/health", health.Handler(db))
+	mux.HandleFunc(" GET /health", health.Handler(db))
 
 	// tracker
 	repo := tracker.NewRepository(db)
 	service := tracker.NewService(repo)
 	handler := tracker.NewHandler(service)
-	//list trackers
-	mux.HandleFunc("/trackers", handler.GetTrackers)
 
-	mux.HandleFunc("/trackers/", handler.GetTrackerByID)
-
+	mux.HandleFunc("GET /trackers", handler.GetTrackers)
+	mux.HandleFunc("POST /trackers", handler.AddTracker)
+	mux.HandleFunc("GET /trackers/{id}", handler.GetTrackerByID)
 	return mux
 }

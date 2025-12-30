@@ -1,5 +1,10 @@
 package tracker
 
+import (
+	"context"
+	"errors"
+)
+
 // buat selection db
 type Service struct {
 	repo *Repository
@@ -41,4 +46,16 @@ func (s *Service) GetTrackerDetailByID(id string) (*TrackerDetail, error) {
 		PriceLogs: prices,
 		NewsLogs:  news,
 	}, nil
+}
+
+func (s *Service) AddTracker(ctx context.Context, keyword string) (*Tracker, error) {
+	if keyword == "" {
+		return nil, errors.New("keyword cannot be empty")
+	}
+
+	result, err := s.repo.AddTracker(ctx, keyword)
+	if err != nil {
+		return nil, err
+	}
+	return result, nil
 }
