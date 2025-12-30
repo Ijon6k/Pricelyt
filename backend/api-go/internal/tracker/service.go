@@ -59,3 +59,7 @@ func (s *Service) AddTracker(ctx context.Context, keyword string) (*Tracker, err
 	}
 	return result, nil
 }
+
+func (s *Service) DeleteTracker(ctx context.Context, id string) error {
+	return s.repo.Delete(ctx, id)
+}

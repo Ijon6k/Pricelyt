@@ -22,5 +22,6 @@ func NewRouter(db *sqlx.DB) http.Handler {
 	mux.HandleFunc("GET /trackers", handler.GetTrackers)
 	mux.HandleFunc("POST /trackers", handler.AddTracker)
 	mux.HandleFunc("GET /trackers/{id}", handler.GetTrackerByID)
+	mux.HandleFunc("DELETE /trackers/{id}", handler.DeleteTracker)
 	return mux
 }

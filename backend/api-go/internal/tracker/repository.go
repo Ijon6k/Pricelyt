@@ -2,6 +2,7 @@ package tracker
 
 import (
 	"context"
+	"errors"
 
 	"github.com/jmoiron/sqlx"
 )
@@ -99,4 +100,23 @@ func (r *Repository) AddTracker(ctx context.Context, keyword string) (*Tracker, 
 	}
 
 	return &t, nil
+}
+
+func (r *Repository) Delete(ctx context.Context, id string) error {
+
+	query := `DELETE FROM trackers WHERE id = $1`
+	result, err := r.db.ExecContext(ctx, query, id)
+	if err != nil {
+		return err
+	}
+
+	rows, err := result.RowsAffected()
+	if err != nil {
+		return err
+	}
+	if rows == 0 {
+		return errors.New("tracker not found")
+	}
+
+	return nil
 }

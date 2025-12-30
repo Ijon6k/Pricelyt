@@ -63,3 +63,23 @@ func (h *Handler) AddTracker(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusCreated)
 	json.NewEncoder(w).Encode(result)
 }
+
+func (h *Handler) DeleteTracker(w http.ResponseWriter, r *http.Request) {
+	id := r.PathValue("id")
+	if id == "" {
+		http.Error(w, "ID is required", http.StatusBadRequest)
+		return
+	}
+
+	err := h.service.DeleteTracker(r.Context(), id)
+	if err != nil {
+		if err.Error() == "tracker not found" {
+			http.Error(w, "Tracker not found", http.StatusNotFound)
+			return
+		}
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	w.WriteHeader(http.StatusNoContent)
+}
