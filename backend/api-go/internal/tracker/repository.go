@@ -120,3 +120,29 @@ func (r *Repository) Delete(ctx context.Context, id string) error {
 
 	return nil
 }
+func (r *Repository) Search(ctx context.Context, keyword string) ([]Tracker, error) {
+	var trackers []Tracker
+
+	// PERBAIKAN:
+	// 1. 'lenght' diganti jadi 'length'
+	// 2. Koma sebelum DESC dihapus
+	query := `
+        SELECT id, keyword, status, created_at, view_count
+        FROM trackers
+        WHERE keyword ILIKE $1
+        ORDER BY length(keyword) ASC, created_at DESC
+        LIMIT 20
+    `
+
+	searchTerm := "%" + keyword + "%"
+	err := r.db.SelectContext(ctx, &trackers, query, searchTerm)
+	if err != nil {
+		return nil, err
+	}
+
+	if trackers == nil {
+		trackers = []Tracker{}
+	}
+
+	return trackers, nil
+}

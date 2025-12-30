@@ -18,13 +18,28 @@ func NewHandler(service *Service) *Handler {
 }
 
 func (h *Handler) GetTrackers(w http.ResponseWriter, r *http.Request) {
-	trackers, err := h.service.ListTrackers()
-	if err != nil {
-		http.Error(w, "failed to fetch trackers", http.StatusInternalServerError)
+	// PERBAIKAN 1: Set Header SELALU di paling atas
+	w.Header().Set("Content-Type", "application/json")
+
+	query := r.URL.Query().Get("q")
+
+	// --- MODE SEARCH ---
+	if query != "" {
+		resp, err := h.service.SearchTracker(r.Context(), query)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return // PERBAIKAN 2: Wajib return biar stop di sini
+		}
+		json.NewEncoder(w).Encode(resp)
 		return
 	}
 
-	w.Header().Set("Content-Type", "application/json")
+	// --- MODE LIST ALL ---
+	trackers, err := h.service.ListTrackers()
+	if err != nil {
+		http.Error(w, "gagal ambil data", http.StatusInternalServerError)
+		return // Wajib return
+	}
 	json.NewEncoder(w).Encode(trackers)
 }
 

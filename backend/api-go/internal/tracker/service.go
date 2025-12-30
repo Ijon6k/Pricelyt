@@ -3,9 +3,15 @@ package tracker
 import (
 	"context"
 	"errors"
+	"strings"
 )
 
-// buat selection db
+type SearchResponse struct {
+	MatchType string    `json:"match_type"`
+	Query     string    `json:"query"`
+	Results   []Tracker `json:"results"`
+}
+
 type Service struct {
 	repo *Repository
 }
@@ -62,4 +68,38 @@ func (s *Service) AddTracker(ctx context.Context, keyword string) (*Tracker, err
 
 func (s *Service) DeleteTracker(ctx context.Context, id string) error {
 	return s.repo.Delete(ctx, id)
+}
+
+func (s *Service) SearchTracker(ctx context.Context, query string) (*SearchResponse, error) {
+	trackers, err := s.repo.Search(ctx, query)
+	if err != nil {
+		return nil, err
+	}
+
+	response := &SearchResponse{
+		Query:   query,
+		Results: trackers,
+	}
+
+	if len(trackers) == 0 {
+		response.MatchType = "NONE"
+		return response, nil
+	}
+
+	isExact := false
+	queryLower := strings.ToLower(query)
+
+	for _, t := range trackers {
+		if strings.ToLower(t.Keyword) == queryLower {
+			isExact = true
+			break
+		}
+	}
+
+	if isExact {
+		response.MatchType = "EXACT"
+	} else {
+		response.MatchType = "PARTIAL"
+	}
+	return response, nil
 }
