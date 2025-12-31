@@ -1,4 +1,3 @@
-// frontend/app/components/SearchBar.js
 "use client";
 
 import { useState, useEffect } from "react";
@@ -12,7 +11,7 @@ export default function SearchBar() {
   const [searchResult, setSearchResult] = useState(null);
   const [showDropdown, setShowDropdown] = useState(false);
 
-  // --- 1. DEBOUNCE LOGIC (Auto Search) ---
+  // debounce
   useEffect(() => {
     if (!query.trim()) {
       setSearchResult(null);
@@ -36,7 +35,7 @@ export default function SearchBar() {
     return () => clearTimeout(timer);
   }, [query]);
 
-  // --- 2. HANDLE ENTER KEY (Logic Baru Kamu) ---
+  // handle enter
   const handleKeyDown = (e) => {
     if (e.key === "Enter") {
       e.preventDefault();
@@ -44,14 +43,14 @@ export default function SearchBar() {
       // CASE A: Search box kosong
       if (!query.trim()) return;
 
-      // CASE B: Data belum siap -> Lempar ke Search Page
+      // CASE B: ke searchpage
       if (!searchResult) {
         router.push(`/search?q=${encodeURIComponent(query)}`);
         setShowDropdown(false);
         return;
       }
 
-      // CASE C: EXACT MATCH -> Langsung Detail
+      // CASE C: EXACT
       if (
         searchResult.match_type === "EXACT" &&
         searchResult.results.length > 0
@@ -59,7 +58,7 @@ export default function SearchBar() {
         router.push(`/trackers/${searchResult.results[0].id}`);
         setShowDropdown(false);
       }
-      // CASE D: Partial / None -> Lempar ke Search Page
+      // CASE D: Partial / None
       else {
         router.push(`/search?q=${encodeURIComponent(query)}`);
         setShowDropdown(false);
@@ -67,7 +66,7 @@ export default function SearchBar() {
     }
   };
 
-  // --- 3. HANDLE ADD TRACKER (Dari Dropdown) ---
+  // add tracker dropdown
   const handleAddTracker = async () => {
     setLoading(true);
     try {
@@ -99,7 +98,6 @@ export default function SearchBar() {
             focus:border-black focus:outline-none shadow-sm transition
           "
         />
-        {/* Ikon Loading / Search */}
         <div className="absolute left-3 top-3.5 text-gray-400">
           {loading ? (
             <span className="animate-spin h-5 w-5 border-2 border-gray-400 border-t-transparent rounded-full block"></span>
@@ -122,7 +120,7 @@ export default function SearchBar() {
         </div>
       </div>
 
-      {/* DROPDOWN RESULT (Hanya muncul kalau user belum tekan Enter) */}
+      {/* DROPDOWN RESULT  */}
       {showDropdown && searchResult && (
         <div className="absolute top-14 left-0 right-0 bg-white border border-gray-200 rounded-lg shadow-xl overflow-hidden">
           {/* LIST BARANG (PARTIAL) */}

@@ -1,13 +1,12 @@
-// app/search/page.js
 "use client";
 
 import { useSearchParams, useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect, useState, Suspense } from "react"; // 1. Import Suspense
 import { searchTrackers, addTracker } from "@/app/lib/api";
 import SearchBar from "@/app/components/SearchBar";
-import TrackerCard from "@/app/components/TrackerCard"; // Import Card Baru
+import TrackerCard from "@/app/components/TrackerCard";
 
-export default function SearchPage() {
+function SearchContent() {
   const searchParams = useSearchParams();
   const query = searchParams.get("q");
   const router = useRouter();
@@ -51,12 +50,10 @@ export default function SearchPage() {
 
   return (
     <div className="max-w-5xl mx-auto px-4 py-8">
-      {/* Search Bar */}
       <div className="mb-10 max-w-2xl mx-auto">
         <SearchBar />
       </div>
 
-      {/* Header Result */}
       <div className="mb-6">
         {query ? (
           <h1 className="text-xl font-bold text-gray-800">
@@ -71,21 +68,17 @@ export default function SearchPage() {
         )}
       </div>
 
-      {/* Loading */}
       {loading && (
         <div className="flex justify-center py-20">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-black"></div>
         </div>
       )}
 
-      {/* Content */}
       {!loading && query && (
         <div className="space-y-6">
-          {/* Grid Hasil */}
           {results.length > 0 && (
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               {results.map((item) => (
-                // Pake component TrackerCard biar konsisten!
                 <div key={item.id} className="h-full">
                   <TrackerCard tracker={item} />
                 </div>
@@ -93,7 +86,6 @@ export default function SearchPage() {
             </div>
           )}
 
-          {/* Kotak "Add Tracker" (Selalu muncul di bawah hasil) */}
           <div className="bg-gray-50 border-2 border-dashed border-gray-200 rounded-xl p-8 text-center hover:border-gray-400 transition-colors">
             <h3 className="text-lg font-semibold text-gray-900 mb-2">
               {results.length === 0
@@ -122,5 +114,15 @@ export default function SearchPage() {
         </div>
       )}
     </div>
+  );
+}
+
+export default function SearchPage() {
+  return (
+    <Suspense
+      fallback={<div className="text-center py-20">Loading search...</div>}
+    >
+      <SearchContent />
+    </Suspense>
   );
 }

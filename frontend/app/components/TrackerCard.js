@@ -1,9 +1,7 @@
-// app/components/TrackerCard.js
 import Link from "next/link";
 import { Eye, Activity, AlertCircle, CheckCircle, Clock } from "lucide-react";
 
 export default function TrackerCard({ tracker }) {
-  // Helper untuk warna status
   const getStatusStyle = (status) => {
     switch (status) {
       case "PENDING":
@@ -18,7 +16,6 @@ export default function TrackerCard({ tracker }) {
     }
   };
 
-  // Helper untuk icon status
   const getStatusIcon = (status) => {
     if (status === "ERROR") return <AlertCircle size={14} />;
     if (status === "PENDING") return <Clock size={14} />;

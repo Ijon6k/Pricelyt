@@ -1,10 +1,9 @@
-// app/page.js
 import SearchBar from "./components/SearchBar";
 import TrackerCard from "./components/TrackerCard";
 import { fetchTrackers } from "./lib/api";
 
+export const dynamic = "force-dynamic";
 export default async function HomePage() {
-  // Tambahkan error handling sederhana untuk fetch
   let trackers = [];
   try {
     trackers = await fetchTrackers();
@@ -14,7 +13,6 @@ export default async function HomePage() {
 
   return (
     <main className="min-h-screen bg-white">
-      {/* Hero Section Kecil */}
       <div className="border-b border-gray-100 bg-gray-50/50">
         <div className="max-w-2xl mx-auto px-4 py-16 text-center">
           <h1 className="text-4xl font-extrabold tracking-tight text-gray-900 mb-4">
@@ -36,14 +34,12 @@ export default async function HomePage() {
         </div>
 
         {trackers.length > 0 ? (
-          // GRID 2 KOLOM (Sama kayak Search Page)
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             {trackers.map((tracker) => (
               <TrackerCard key={tracker.id} tracker={tracker} />
             ))}
           </div>
         ) : (
-          // Empty State
           <div className="text-center py-20 bg-gray-50 rounded-xl border border-dashed border-gray-200">
             <p className="text-gray-500">Belum ada barang yang dilacak.</p>
           </div>
