@@ -9,24 +9,22 @@ import (
 	apihttp "api/internal/http"
 
 	"github.com/joho/godotenv"
+	"github.com/rs/cors"
 )
 
 func main() {
-	// load env
-	_ = godotenv.Load("../../.env") // ignore error, env bisa dari OS
+	_ = godotenv.Load("../../.env")
 
 	dsn := os.Getenv("DATABASE_URL")
 	if dsn == "" {
 		log.Fatal("DATABASE_URL is not set")
 	}
 
-	// connect db
 	conn, err := db.NewPostgres(dsn)
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	// 🔴 DEBUG: pastikan DB yang dipakai API
 	var addr, dbname string
 	err = conn.QueryRow(
 		"SELECT inet_server_addr()::text, current_database()",
@@ -39,8 +37,18 @@ func main() {
 	log.Println("  address :", addr)
 	log.Println("  database:", dbname)
 
-	// http server
 	router := apihttp.NewRouter(conn)
+
+	c := cors.New(cors.Options{
+		AllowedOrigins:   []string{"http://localhost:3000"},
+		AllowedMethods:   []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
+		AllowedHeaders:   []string{"Origin", "Content-Type", "Authorization"},
+		AllowCredentials: true,
+
+		Debug: true,
+	})
+
+	handler := c.Handler(router)
 
 	port := os.Getenv("APP_PORT")
 	if port == "" {
@@ -48,5 +56,6 @@ func main() {
 	}
 
 	log.Println("API running on :" + port)
-	log.Fatal(http.ListenAndServe(":"+port, router))
+
+	log.Fatal(http.ListenAndServe(":"+port, handler))
 }
