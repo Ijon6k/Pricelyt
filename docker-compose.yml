@@ -10,6 +10,8 @@ services:
       - "5432:5432"
     volumes:
       - pgdata:/var/lib/postgresql/data
+    logging:
+      driver: journald
 
   migrate:
     image: postgres:16
@@ -27,6 +29,8 @@ services:
       done
       "
     restart: "no"
+    logging:
+      driver: journald
 
   scraper:
     build: ./backend/worker-python/scraper
@@ -37,6 +41,13 @@ services:
     depends_on:
       - migrate
     restart: unless-stopped
+
+    tmpfs:
+      - /tmp
+      - /var/tmp
+
+    logging:
+      driver: journald
 
 volumes:
   pgdata:
