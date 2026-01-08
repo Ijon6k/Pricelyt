@@ -29,11 +29,11 @@ export default async function HomePage() {
       <div className="max-w-5xl mx-auto px-4 py-12">
         <div className="flex items-center justify-between mb-6">
           <h2 className="text-xl font-bold text-gray-800">
-            Daftar Pantauan ({trackers.length})
+            Daftar Pantauan ({trackers?.length ?? 0})
           </h2>
         </div>
 
-        {trackers.length > 0 ? (
+        {trackers?.length > 0 ? (
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             {trackers.map((tracker) => (
               <TrackerCard key={tracker.id} tracker={tracker} />

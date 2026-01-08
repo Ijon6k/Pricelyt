@@ -11,6 +11,23 @@ services:
     volumes:
       - pgdata:/var/lib/postgresql/data
 
+  migrate:
+    image: postgres:16
+    depends_on:
+      - postgres
+    volumes:
+      - ./migrations:/migrations
+    environment:
+      PGPASSWORD: postgres
+    command: >
+      bash -c "
+      for f in /migrations/*.sql; do
+        echo Running $$f;
+        psql -h postgres -U postgres -d pricelyt_db -f $$f;
+      done
+      "
+    restart: "no"
+
   scraper:
     build: ./backend/worker-python/scraper
     volumes:
@@ -18,7 +35,7 @@ services:
     environment:
       DATABASE_URL: postgres://postgres:postgres@postgres:5432/pricelyt_db
     depends_on:
-      - postgres
+      - migrate
     restart: unless-stopped
 
 volumes:
