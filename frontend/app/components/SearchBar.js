@@ -1,17 +1,20 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { searchTrackers, addTracker } from "@/app/lib/api";
+import { Search, Loader2, ArrowRight, Plus } from "lucide-react";
 
-export default function SearchBar() {
+export default function SearchBar({ initialValue = "" }) {
   const router = useRouter();
-  const [query, setQuery] = useState("");
+  const wrapperRef = useRef(null); // Ref untuk klik di luar dropdown
+
+  const [query, setQuery] = useState(initialValue);
   const [loading, setLoading] = useState(false);
   const [searchResult, setSearchResult] = useState(null);
   const [showDropdown, setShowDropdown] = useState(false);
 
-  // debounce
+  // --- Logic 1: Debounce Search ---
   useEffect(() => {
     if (!query.trim()) {
       setSearchResult(null);
@@ -25,8 +28,8 @@ export default function SearchBar() {
         const data = await searchTrackers(query);
         setSearchResult(data);
         setShowDropdown(true);
-      } catch (err) {
-        console.error("Search failed", err);
+      } catch (e) {
+        console.error(e);
       } finally {
         setLoading(false);
       }
@@ -35,162 +38,164 @@ export default function SearchBar() {
     return () => clearTimeout(timer);
   }, [query]);
 
-  // handle enter
-  const handleKeyDown = (e) => {
-    if (e.key === "Enter") {
-      e.preventDefault();
-
-      // CASE A: Search box kosong
-      if (!query.trim()) return;
-
-      // CASE B: ke searchpage
-      if (!searchResult) {
-        router.push(`/search?q=${encodeURIComponent(query)}`);
-        setShowDropdown(false);
-        return;
-      }
-
-      // CASE C: EXACT
-      if (
-        searchResult.match_type === "EXACT" &&
-        searchResult.results.length > 0
-      ) {
-        router.push(`/trackers/${searchResult.results[0].id}`);
-        setShowDropdown(false);
-      }
-      // CASE D: Partial / None
-      else {
-        router.push(`/search?q=${encodeURIComponent(query)}`);
+  // --- Logic 2: Close Dropdown on Click Outside ---
+  useEffect(() => {
+    function handleClickOutside(event) {
+      if (wrapperRef.current && !wrapperRef.current.contains(event.target)) {
         setShowDropdown(false);
       }
     }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, [wrapperRef]);
+
+  // --- Logic 3: Handle Actions ---
+  const handleSearch = () => {
+    if (!query.trim()) return;
+    setShowDropdown(false);
+    router.push(`/search?q=${encodeURIComponent(query)}`);
   };
 
-  // add tracker dropdown
-  const handleAddTracker = async () => {
+  const handleKeyDown = (e) => {
+    if (e.key === "Enter") handleSearch();
+  };
+
+  const handleCreateNew = async () => {
     setLoading(true);
     try {
-      const newItem = await addTracker(query);
-      router.push(`/trackers/${newItem.id}`);
-      setShowDropdown(false);
-    } catch (err) {
-      alert("Gagal menambah tracker");
+      const item = await addTracker(query);
+      router.push(`/trackers/${item.id}`);
+    } catch (e) {
+      alert("Gagal membuat tracker baru.");
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className="relative w-full max-w-lg mx-auto z-50">
-      {/* INPUT SEARCH */}
-      <div className="relative">
+    <div ref={wrapperRef} className="relative w-full z-50">
+      {/* INPUT CONTAINER */}
+      <div
+        className="
+          group flex items-center rounded-2xl overflow-hidden
+          bg-[rgb(var(--card))] border border-[rgb(var(--border))]
+          shadow-lg hover:shadow-xl hover:border-[rgb(var(--accent))]
+          transition-all duration-300
+        "
+      >
+        {/* Icon Kiri */}
+        <div className="pl-6 text-[rgb(var(--muted))] group-focus-within:text-[rgb(var(--accent))] transition-colors">
+          {loading ? (
+            <Loader2 size={22} className="animate-spin" />
+          ) : (
+            <Search size={22} />
+          )}
+        </div>
+
+        {/* Input Field */}
         <input
-          type="text"
           value={query}
           onChange={(e) => setQuery(e.target.value)}
           onKeyDown={handleKeyDown}
           onFocus={() => {
             if (searchResult) setShowDropdown(true);
           }}
-          placeholder="Cari barang (misal: RTX 3060)..."
+          placeholder="Cari produk (misal: RTX 4070, MacBook Air M2)..."
           className="
-            w-full rounded-lg border border-gray-300 px-4 py-3 pl-10
-            focus:border-black focus:outline-none shadow-sm transition
+            w-full bg-transparent px-4 py-5
+            text-lg font-medium text-[rgb(var(--fg))] outline-none
+            placeholder:text-[rgb(var(--muted))] placeholder:font-normal
           "
         />
-        <div className="absolute left-3 top-3.5 text-gray-400">
-          {loading ? (
-            <span className="animate-spin h-5 w-5 border-2 border-gray-400 border-t-transparent rounded-full block"></span>
-          ) : (
-            <svg
-              width="20"
-              height="20"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth="2"
-                d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
-              ></path>
-            </svg>
-          )}
+
+        {/* Button Kanan */}
+        <div className="pr-2">
+          <button
+            onClick={handleSearch}
+            className="
+                flex items-center gap-2 px-6 py-3 rounded-xl font-semibold tracking-wide
+                bg-[rgb(var(--accent))] text-white
+                hover:opacity-90 hover:scale-[1.02] active:scale-95
+                transition-all duration-200
+                "
+          >
+            <span>CARI</span>
+          </button>
         </div>
       </div>
 
-      {/* DROPDOWN RESULT  */}
+      {/* DROPDOWN RESULTS */}
       {showDropdown && searchResult && (
-        <div className="absolute top-14 left-0 right-0 bg-white border border-gray-200 rounded-lg shadow-xl overflow-hidden">
-          {/* LIST BARANG (PARTIAL) */}
+        <div
+          className="
+            absolute top-[calc(100%+12px)] left-0 right-0
+            bg-[rgb(var(--card))]
+            border border-[rgb(var(--border))]
+            shadow-2xl rounded-2xl overflow-hidden
+            animate-in fade-in slide-in-from-top-2
+          "
+        >
           {searchResult.results.length > 0 ? (
-            <ul className="max-h-60 overflow-y-auto">
-              {searchResult.results.map((item) => (
-                <li
-                  key={item.id}
-                  className="border-b last:border-none border-gray-100"
-                >
-                  <button
-                    onClick={() => {
-                      router.push(`/trackers/${item.id}`);
-                      setShowDropdown(false);
-                    }}
-                    className="w-full text-left px-4 py-3 hover:bg-gray-50 flex justify-between items-center group"
+            <div>
+              <div className="px-4 py-3 bg-[rgb(var(--bg))]/50 border-b border-[rgb(var(--border))] text-xs font-bold text-[rgb(var(--muted))] uppercase tracking-wider">
+                Ditemukan di Database
+              </div>
+              <ul className="max-h-[300px] overflow-y-auto custom-scrollbar">
+                {searchResult.results.map((item) => (
+                  <li
+                    key={item.id}
+                    className="border-b border-[rgb(var(--border))] last:border-none"
                   >
-                    <div>
-                      <span className="font-medium text-gray-800 group-hover:text-black">
-                        {item.keyword}
-                      </span>
-                      <div className="text-xs text-gray-400 mt-0.5">
-                        Status: {item.status}
+                    <button
+                      onClick={() => router.push(`/trackers/${item.id}`)}
+                      className="w-full px-6 py-4 text-left hover:bg-[rgb(var(--bg))] transition flex justify-between items-center group/item"
+                    >
+                      <div>
+                        <div className="font-semibold text-[rgb(var(--fg))] group-hover/item:text-[rgb(var(--accent))] transition-colors">
+                          {item.keyword}
+                        </div>
+                        <div className="flex items-center gap-2 mt-1">
+                          <span className="text-xs px-2 py-0.5 rounded bg-[rgb(var(--border))] text-[rgb(var(--muted))] font-mono">
+                            {item.status}
+                          </span>
+                        </div>
                       </div>
-                    </div>
-                    <span className="text-gray-300 group-hover:text-gray-600">
-                      →
-                    </span>
-                  </button>
-                </li>
-              ))}
-            </ul>
+                      <ArrowRight
+                        size={18}
+                        className="text-[rgb(var(--muted))] group-hover/item:text-[rgb(var(--accent))]"
+                      />
+                    </button>
+                  </li>
+                ))}
+              </ul>
+              <div className="p-2 bg-[rgb(var(--bg))]/30 border-t border-[rgb(var(--border))] text-center">
+                <button
+                  onClick={handleSearch}
+                  className="text-xs font-semibold text-[rgb(var(--accent))] hover:underline"
+                >
+                  Lihat semua hasil
+                </button>
+              </div>
+            </div>
           ) : (
-            // NOT FOUND STATE DI DROPDOWN
-            <div className="p-4 text-center">
-              <p className="text-gray-500 mb-3 text-sm">
-                Barang <strong>"{query}"</strong> tidak ditemukan.
+            // EMPTY STATE DROPDOWN
+            <div className="p-8 text-center">
+              <p className="text-[rgb(var(--muted))] mb-4">
+                Barang <strong>"{query}"</strong> belum dilacak.
               </p>
               <button
-                onClick={handleAddTracker}
-                className="w-full bg-black text-white py-2 rounded-md text-sm font-medium hover:bg-gray-800 transition"
+                onClick={handleCreateNew}
+                className="
+                  inline-flex items-center gap-2 bg-[rgb(var(--fg))] text-[rgb(var(--bg))]
+                  px-6 py-3 rounded-xl font-semibold hover:opacity-80 transition shadow-lg
+                "
               >
-                + Tambah Tracker Baru
-              </button>
-            </div>
-          )}
-
-          {/* FOOTER DROPDOWN (Link ke Search Page) */}
-          {searchResult.match_type === "PARTIAL" && (
-            <div className="bg-gray-50 p-3 border-t text-center">
-              <button
-                onClick={() => {
-                  router.push(`/search?q=${encodeURIComponent(query)}`);
-                  setShowDropdown(false);
-                }}
-                className="text-xs text-blue-600 hover:underline font-semibold"
-              >
-                Lihat semua hasil untuk "{query}"
+                <Plus size={18} />
+                Lacak Barang Baru
               </button>
             </div>
           )}
         </div>
-      )}
-
-      {/* Overlay transparan (Klik luar buat nutup dropdown) */}
-      {showDropdown && (
-        <div
-          className="fixed inset-0 z-[-1]"
-          onClick={() => setShowDropdown(false)}
-        ></div>
       )}
     </div>
   );

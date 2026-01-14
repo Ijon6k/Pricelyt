@@ -3,48 +3,73 @@ import TrackerCard from "./components/TrackerCard";
 import { fetchTrackers } from "./lib/api";
 
 export const dynamic = "force-dynamic";
+
 export default async function HomePage() {
   let trackers = [];
+
   try {
     trackers = await fetchTrackers();
   } catch (error) {
-    console.error("Gagal load trackers di home:", error);
+    console.error("Gagal load trackers:", error);
   }
 
   return (
-    <main className="min-h-screen bg-white">
-      <div className="border-b border-gray-100 bg-gray-50/50">
-        <div className="max-w-2xl mx-auto px-4 py-16 text-center">
-          <h1 className="text-4xl font-extrabold tracking-tight text-gray-900 mb-4">
-            Pricelyt ⚡
+    <main className="min-h-screen">
+      {/* HERO */}
+      <section className="border-b border-[rgb(var(--border))] bg-[rgb(var(--bg))]">
+        <div className="max-w-5xl mx-auto px-6 py-24 text-center">
+          <div
+            className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full
+            border border-[rgb(var(--border))] bg-[rgb(var(--card))] mb-8"
+          >
+            <span className="w-2 h-2 rounded-full bg-green-500" />
+            <span className="text-xs tracking-widest text-green-600">
+              SYSTEM OPERATIONAL
+            </span>
+          </div>
+
+          <h1 className="text-6xl md:text-7xl font-extrabold tracking-tight mb-6">
+            Market <br />
+            <span className="text-[rgb(var(--accent))]">Intelligence</span>
           </h1>
-          <p className="text-gray-500 mb-8 text-lg">
-            Pantau harga barang impianmu secara real-time.
+
+          <p className="text-[rgb(var(--muted))] text-lg mb-2">
+            Harga historis dan analisis AI dalam satu dashboard futuristik.
           </p>
+
+          <p className="italic text-[rgb(var(--muted))] mb-12">
+            Tanpa gangguan. Tanpa noise.
+          </p>
+
           <SearchBar />
         </div>
-      </div>
+      </section>
 
-      {/* List Trackers */}
-      <div className="max-w-5xl mx-auto px-4 py-12">
-        <div className="flex items-center justify-between mb-6">
-          <h2 className="text-xl font-bold text-gray-800">
-            Daftar Pantauan ({trackers?.length ?? 0})
+      {/* TRACKERS */}
+      <section className="max-w-7xl mx-auto px-6 py-20">
+        <div className="flex items-center justify-between mb-10">
+          <h2 className="text-xl font-bold tracking-wider uppercase">
+            Active Trackers
           </h2>
+          <span className="text-sm text-[rgb(var(--muted))]">
+            {trackers.length} monitored assets
+          </span>
         </div>
 
-        {trackers?.length > 0 ? (
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        {trackers.length > 0 ? (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-10">
             {trackers.map((tracker) => (
               <TrackerCard key={tracker.id} tracker={tracker} />
             ))}
           </div>
         ) : (
-          <div className="text-center py-20 bg-gray-50 rounded-xl border border-dashed border-gray-200">
-            <p className="text-gray-500">Belum ada barang yang dilacak.</p>
+          <div className="py-32 text-center border border-dashed border-[rgb(var(--border))] rounded-2xl bg-[rgb(var(--card))] shadow-sm">
+            <p className="text-[rgb(var(--muted))]">
+              Belum ada tracker. Mulai dengan mencari produk.
+            </p>
           </div>
         )}
-      </div>
+      </section>
     </main>
   );
 }
