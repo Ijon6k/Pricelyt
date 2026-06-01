@@ -8,7 +8,10 @@ import (
 )
 
 func RateLimiterConfig(next http.Handler) http.Handler {
-	lmt := tollbooth.NewLimiter(3, nil)
+	// Behind a reverse proxy all requests share the proxy's IP, so the
+	// per-IP bucket is effectively global. Keep this generous enough for
+	// SSR + debounced client search not to trip it.
+	lmt := tollbooth.NewLimiter(50, nil)
 
 	lmt.SetOnLimitReached(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")

@@ -9,79 +9,115 @@ import {
   Tooltip,
   ResponsiveContainer,
 } from "recharts";
-import { format } from "date-fns";
+import { useMemo } from "react";
+
+function CustomTooltip({ active, payload, label }) {
+  if (!active || !payload?.length) return null;
+  const val = payload[0].value;
+  const formatted = new Intl.NumberFormat("en-US", {
+    style: "currency",
+    currency: "USD",
+  }).format(val);
+
+  const date = new Date(label).toLocaleDateString("en-US", {
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+  });
+
+  return (
+    <div className="bg-[rgb(var(--card))] border border-[rgb(var(--border))] rounded-lg px-3 py-2 shadow-lg">
+      <p className="text-xs text-[rgb(var(--muted))] mb-0.5">{date}</p>
+      <p className="text-sm font-semibold text-[rgb(var(--fg))] tabular-nums">
+        {formatted}
+      </p>
+    </div>
+  );
+}
 
 export default function PriceChart({ data }) {
-  // Format data untuk Recharts
-  // Kita balik arraynya agar urut dari tanggal lama ke baru (kiri ke kanan)
-  const chartData = [...data].reverse().map((log) => ({
-    date: log.scraped_at,
-    price: log.market_price,
-    label: format(new Date(log.scraped_at), "dd MMM"),
-    fullDate: format(new Date(log.scraped_at), "dd MMM yyyy, HH:mm"),
-  }));
+  const chartData = useMemo(() => {
+    if (!data || data.length === 0) return [];
+    return data.map((log) => ({
+      date: log.scraped_at,
+      price: Number(log.market_price) || 0,
+    }));
+  }, [data]);
+
+  if (chartData.length < 2) {
+    return (
+      <div className="flex items-center justify-center h-[350px] text-sm text-[rgb(var(--muted))]">
+        Not enough data points for a chart yet. Need at least 2 price records.
+      </div>
+    );
+  }
+
+  const prices = chartData.map((d) => d.price);
+  const minPrice = Math.min(...prices);
+  const maxPrice = Math.max(...prices);
+  const padding = Math.max((maxPrice - minPrice) * 0.1, 1);
 
   return (
     <div className="w-full h-[350px]">
       <ResponsiveContainer width="100%" height="100%">
         <AreaChart
           data={chartData}
-          margin={{ top: 10, right: 10, left: 0, bottom: 0 }}
+          margin={{ top: 5, right: 5, left: 0, bottom: 0 }}
         >
           <defs>
-            <linearGradient id="colorPrice" x1="0" y1="0" x2="0" y2="1">
-              <stop
-                offset="5%"
-                stopColor="rgb(var(--accent))"
-                stopOpacity={0.3}
-              />
-              <stop
-                offset="95%"
-                stopColor="rgb(var(--accent))"
-                stopOpacity={0}
-              />
+            <linearGradient id="priceGradient" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stopColor="rgb(var(--accent))" stopOpacity={0.15} />
+              <stop offset="100%" stopColor="rgb(var(--accent))" stopOpacity={0} />
             </linearGradient>
           </defs>
           <CartesianGrid
             strokeDasharray="3 3"
-            vertical={false}
             stroke="rgb(var(--border))"
+            vertical={false}
           />
           <XAxis
-            dataKey="label"
-            axisLine={false}
+            dataKey="date"
+            tickFormatter={(v) =>
+              new Date(v).toLocaleDateString("en-US", {
+                month: "short",
+                day: "numeric",
+              })
+            }
+            stroke="rgb(var(--muted))"
+            fontSize={11}
             tickLine={false}
-            tick={{ fill: "rgb(var(--muted))", fontSize: 12 }}
-            dy={10}
+            axisLine={false}
           />
           <YAxis
-            axisLine={false}
+            domain={[minPrice - padding, maxPrice + padding]}
+            tickFormatter={(v) =>
+              new Intl.NumberFormat("en-US", {
+                style: "currency",
+                currency: "USD",
+                minimumFractionDigits: 0,
+                maximumFractionDigits: 0,
+              }).format(v)
+            }
+            stroke="rgb(var(--muted))"
+            fontSize={11}
             tickLine={false}
-            tick={{ fill: "rgb(var(--muted))", fontSize: 12 }}
-            tickFormatter={(val) => `$${val}`}
+            axisLine={false}
+            width={60}
           />
-          <Tooltip
-            contentStyle={{
-              backgroundColor: "rgb(var(--card))",
-              borderColor: "rgb(var(--border))",
-              borderRadius: "8px",
-              color: "rgb(var(--fg))",
-            }}
-            itemStyle={{ color: "rgb(var(--accent))" }}
-            labelStyle={{ color: "rgb(var(--muted))", marginBottom: "0.5rem" }}
-            formatter={(value) => [`$${value.toLocaleString()}`, "Price"]}
-            labelFormatter={(label, payload) => {
-              if (payload && payload[0]) return payload[0].payload.fullDate;
-              return label;
-            }}
-          />
+          <Tooltip content={<CustomTooltip />} />
           <Area
             type="monotone"
             dataKey="price"
             stroke="rgb(var(--accent))"
             strokeWidth={2}
-            fillOpacity={1}
-            fill="url(#colorPrice)"
+            fill="url(#priceGradient)"
+            dot={false}
+            activeDot={{
+              r: 4,
+              fill: "rgb(var(--accent))",
+              stroke: "rgb(var(--card))",
+              strokeWidth: 2,
+            }}
           />
         </AreaChart>
       </ResponsiveContainer>

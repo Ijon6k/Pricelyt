@@ -1,5 +1,6 @@
 import asyncio
 import logging
+import os
 import random
 import re
 import statistics
@@ -10,7 +11,7 @@ from browser_factory import create_browser
 logger = logging.getLogger("scraper.ebay")
 
 PAGES_TO_SCRAPE = 2
-IDR_TO_USD_RATE = 16200  # Normalisasi ke USD untuk database
+IDR_TO_USD_RATE = int(os.getenv("IDR_TO_USD_RATE", "16200"))  # Normalisasi ke USD untuk database
 
 NEGATIVE_KEYWORDS = [
     "broken",

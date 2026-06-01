@@ -7,14 +7,14 @@ import { Search, Loader2, ArrowRight, Plus } from "lucide-react";
 
 export default function SearchBar({ initialValue = "" }) {
   const router = useRouter();
-  const wrapperRef = useRef(null); // Ref untuk klik di luar dropdown
+  const wrapperRef = useRef(null);
 
   const [query, setQuery] = useState(initialValue);
   const [loading, setLoading] = useState(false);
   const [searchResult, setSearchResult] = useState(null);
   const [showDropdown, setShowDropdown] = useState(false);
 
-  // --- Logic 1: Debounce Search ---
+  // Debounced search-as-you-type.
   useEffect(() => {
     if (!query.trim()) {
       setSearchResult(null);
@@ -38,7 +38,7 @@ export default function SearchBar({ initialValue = "" }) {
     return () => clearTimeout(timer);
   }, [query]);
 
-  // --- Logic 2: Close Dropdown on Click Outside ---
+  // Close dropdown when clicking outside.
   useEffect(() => {
     function handleClickOutside(event) {
       if (wrapperRef.current && !wrapperRef.current.contains(event.target)) {
@@ -49,7 +49,6 @@ export default function SearchBar({ initialValue = "" }) {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, [wrapperRef]);
 
-  // --- Logic 3: Handle Actions ---
   const handleSearch = () => {
     if (!query.trim()) return;
     setShowDropdown(false);
@@ -66,33 +65,24 @@ export default function SearchBar({ initialValue = "" }) {
       const item = await addTracker(query);
       router.push(`/trackers/${item.id}`);
     } catch (e) {
-      alert("Gagal membuat tracker baru.");
+      alert("Failed to create tracker.");
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div ref={wrapperRef} className="relative w-full z-50">
-      {/* INPUT CONTAINER */}
-      <div
-        className="
-          group flex items-center rounded-2xl overflow-hidden
-          bg-[rgb(var(--card))] border border-[rgb(var(--border))]
-          shadow-lg hover:shadow-xl hover:border-[rgb(var(--accent))]
-          transition-all duration-300
-        "
-      >
-        {/* Icon Kiri */}
-        <div className="pl-6 text-[rgb(var(--muted))] group-focus-within:text-[rgb(var(--accent))] transition-colors">
+    <div ref={wrapperRef} className="relative w-full z-50 text-left">
+      {/* INPUT */}
+      <div className="flex items-center rounded-xl bg-[rgb(var(--card))] border border-[rgb(var(--border))] focus-within:border-[rgb(var(--accent))] transition-colors">
+        <div className="pl-4 text-[rgb(var(--muted))]">
           {loading ? (
-            <Loader2 size={22} className="animate-spin" />
+            <Loader2 size={18} className="animate-spin" />
           ) : (
-            <Search size={22} />
+            <Search size={18} />
           )}
         </div>
 
-        {/* Input Field */}
         <input
           value={query}
           onChange={(e) => setQuery(e.target.value)}
@@ -100,45 +90,27 @@ export default function SearchBar({ initialValue = "" }) {
           onFocus={() => {
             if (searchResult) setShowDropdown(true);
           }}
-          placeholder="Cari produk (misal: RTX 4070, MacBook Air M2)..."
-          className="
-            w-full bg-transparent px-4 py-5
-            text-lg font-medium text-[rgb(var(--fg))] outline-none
-            placeholder:text-[rgb(var(--muted))] placeholder:font-normal
-          "
+          placeholder="Search a product, e.g. RTX 4070, MacBook Air M2"
+          className="w-full bg-transparent px-3 py-3.5 text-base text-[rgb(var(--fg))] outline-none placeholder:text-[rgb(var(--muted))]"
         />
 
-        {/* Button Kanan */}
         <div className="pr-2">
           <button
             onClick={handleSearch}
-            className="
-                flex items-center gap-2 px-6 py-3 rounded-xl font-semibold tracking-wide
-                bg-[rgb(var(--accent))] text-white
-                hover:opacity-90 hover:scale-[1.02] active:scale-95
-                transition-all duration-200
-                "
+            className="px-4 py-2 rounded-lg text-sm font-medium bg-[rgb(var(--accent))] text-white hover:opacity-90 active:opacity-80 transition-opacity"
           >
-            <span>CARI</span>
+            Search
           </button>
         </div>
       </div>
 
-      {/* DROPDOWN RESULTS */}
+      {/* DROPDOWN */}
       {showDropdown && searchResult && (
-        <div
-          className="
-            absolute top-[calc(100%+12px)] left-0 right-0
-            bg-[rgb(var(--card))]
-            border border-[rgb(var(--border))]
-            shadow-2xl rounded-2xl overflow-hidden
-            animate-in fade-in slide-in-from-top-2
-          "
-        >
+        <div className="absolute top-[calc(100%+8px)] left-0 right-0 bg-[rgb(var(--card))] border border-[rgb(var(--border))] rounded-xl overflow-hidden shadow-sm">
           {searchResult.results.length > 0 ? (
             <div>
-              <div className="px-4 py-3 bg-[rgb(var(--bg))]/50 border-b border-[rgb(var(--border))] text-xs font-bold text-[rgb(var(--muted))] uppercase tracking-wider">
-                Ditemukan di Database
+              <div className="px-4 py-2.5 border-b border-[rgb(var(--border))] text-xs font-medium text-[rgb(var(--muted))] uppercase tracking-wider">
+                Found in database
               </div>
               <ul className="max-h-[300px] overflow-y-auto custom-scrollbar">
                 {searchResult.results.map((item) => (
@@ -148,50 +120,47 @@ export default function SearchBar({ initialValue = "" }) {
                   >
                     <button
                       onClick={() => router.push(`/trackers/${item.id}`)}
-                      className="w-full px-6 py-4 text-left hover:bg-[rgb(var(--bg))] transition flex justify-between items-center group/item"
+                      className="w-full px-4 py-3 text-left hover:bg-[rgb(var(--bg))] transition-colors flex justify-between items-center group"
                     >
                       <div>
-                        <div className="font-semibold text-[rgb(var(--fg))] group-hover/item:text-[rgb(var(--accent))] transition-colors">
+                        <div className="font-medium text-[rgb(var(--fg))]">
                           {item.keyword}
                         </div>
-                        <div className="flex items-center gap-2 mt-1">
-                          <span className="text-xs px-2 py-0.5 rounded bg-[rgb(var(--border))] text-[rgb(var(--muted))] font-mono">
-                            {item.status}
-                          </span>
-                        </div>
+                        <span className="text-xs text-[rgb(var(--muted))]">
+                          {item.status}
+                        </span>
                       </div>
                       <ArrowRight
-                        size={18}
-                        className="text-[rgb(var(--muted))] group-hover/item:text-[rgb(var(--accent))]"
+                        size={16}
+                        className="text-[rgb(var(--muted))] group-hover:text-[rgb(var(--accent))] transition-colors"
                       />
                     </button>
                   </li>
                 ))}
               </ul>
-              <div className="p-2 bg-[rgb(var(--bg))]/30 border-t border-[rgb(var(--border))] text-center">
+              <div className="p-2 border-t border-[rgb(var(--border))] text-center">
                 <button
                   onClick={handleSearch}
-                  className="text-xs font-semibold text-[rgb(var(--accent))] hover:underline"
+                  className="text-xs font-medium text-[rgb(var(--accent))] hover:underline"
                 >
-                  Lihat semua hasil
+                  See all results
                 </button>
               </div>
             </div>
           ) : (
-            // EMPTY STATE DROPDOWN
-            <div className="p-8 text-center">
-              <p className="text-[rgb(var(--muted))] mb-4">
-                Barang <strong>"{query}"</strong> belum dilacak.
+            <div className="p-6 text-center">
+              <p className="text-sm text-[rgb(var(--muted))] mb-4">
+                <strong className="text-[rgb(var(--fg))]">
+                  &ldquo;{query}&rdquo;
+                </strong>{" "}
+                isn&rsquo;t tracked yet.
               </p>
               <button
                 onClick={handleCreateNew}
-                className="
-                  inline-flex items-center gap-2 bg-[rgb(var(--fg))] text-[rgb(var(--bg))]
-                  px-6 py-3 rounded-xl font-semibold hover:opacity-80 transition shadow-lg
-                "
+                className="inline-flex items-center gap-2 bg-[rgb(var(--accent))] text-white px-4 py-2 rounded-lg text-sm font-medium hover:opacity-90 transition-opacity"
               >
-                <Plus size={18} />
-                Lacak Barang Baru
+                <Plus size={16} />
+                Track this product
               </button>
             </div>
           )}

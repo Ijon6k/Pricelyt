@@ -1,5 +1,6 @@
 import asyncio
 import logging
+import os
 import random
 import re
 import statistics
@@ -11,7 +12,9 @@ logger = logging.getLogger("scraper.price")
 
 PAGES_TO_SCRAPE = 3
 MAX_DETAIL_PAGE_VISITS = 5
-IDR_TO_USD_RATE = 16200
+# Rate used to normalize a detected non-USD (IDR) price back to USD. Override
+# via env when scraping a different-currency marketplace. Set to 1 to disable.
+IDR_TO_USD_RATE = int(os.getenv("IDR_TO_USD_RATE", "16200"))
 
 
 def _normalize_text(text: str) -> str:

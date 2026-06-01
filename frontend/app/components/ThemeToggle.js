@@ -1,39 +1,41 @@
 "use client";
-import { useEffect, useState } from "react";
+
 import { Sun, Moon } from "lucide-react";
+import { useState, useEffect } from "react";
 
 export default function ThemeToggle() {
-  const [theme, setTheme] = useState("light");
+  const [isDark, setIsDark] = useState(false);
+  const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
-    const saved = localStorage.getItem("theme") || "light";
-    setTheme(saved);
-    document.documentElement.dataset.theme = saved;
+    setMounted(true);
+    const stored = localStorage.getItem("theme");
+    const dark =
+      stored === "dark" ||
+      (!stored && window.matchMedia("(prefers-color-scheme: dark)").matches);
+    setIsDark(dark);
+    document.documentElement.setAttribute("data-theme", dark ? "dark" : "light");
   }, []);
 
-  const toggleTheme = () => {
-    const next = theme === "light" ? "dark" : "light";
-    setTheme(next);
-    document.documentElement.dataset.theme = next;
-    localStorage.setItem("theme", next);
+  const toggle = () => {
+    const next = !isDark;
+    setIsDark(next);
+    document.documentElement.setAttribute("data-theme", next ? "dark" : "light");
+    localStorage.setItem("theme", next ? "dark" : "light");
   };
+
+  // Avoid hydration mismatch — render a placeholder until mounted.
+  if (!mounted) {
+    return <div className="w-8 h-8" />;
+  }
 
   return (
     <button
-      onClick={toggleTheme}
-      className="
-        fixed top-6 right-6 z-50
-        flex items-center gap-2
-        bg-[rgb(var(--card))]
-        border border-[rgb(var(--border))]
-        shadow-sm hover:shadow-md
-        rounded-full px-4 py-2
-        text-sm font-medium
-        transition
-      "
+      onClick={tab={toggle}}
+      className="p-2 rounded-lg text-[rgb(var(--muted))] hover:text-[rgb(var(--fg))] hover:bg-[rgb(var(--border))]/40 transition-colors"
+      aria-label="Toggle theme"
     >
-      {theme === "light" ? <Moon size={16} /> : <Sun size={16} />}
-      {theme === "light" ? "Dark" : "Light"}
+      {isDark ? <Sun size={16} /> : <Moon size={16} />}
     </button>
   );
 }

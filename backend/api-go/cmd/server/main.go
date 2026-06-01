@@ -4,6 +4,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"strings"
 
 	"api/internal/db"
 	apihttp "api/internal/http"
@@ -39,13 +40,19 @@ func main() {
 
 	router := apihttp.NewRouter(conn)
 
-	c := cors.New(cors.Options{
-		AllowedOrigins:   []string{"http://localhost:3000"},
-		AllowedMethods:   []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
-		AllowedHeaders:   []string{"Origin", "Content-Type", "Authorization"},
-		AllowCredentials: true,
+	// Allowed CORS origins come from env (comma-separated). Behind the
+	// nginx reverse proxy the frontend and API share an origin, so CORS
+	// is effectively a no-op there, but keep it configurable for dev.
+	origins := []string{"http://localhost:3000", "http://localhost:4444"}
+	if env := os.Getenv("CORS_ORIGINS"); env != "" {
+		origins = strings.Split(env, ",")
+	}
 
-		Debug: true,
+	c := cors.New(cors.Options{
+		AllowedOrigins:   origins,
+		AllowedMethods:   []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
+		AllowedHeaders:   []string{"Origin", "Content-Type", "Authorization", "X-Admin-Key"},
+		AllowCredentials: true,
 	})
 
 	handler := c.Handler(router)

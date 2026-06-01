@@ -1,5 +1,10 @@
 packages:
   - .
-ignoredBuiltDependencies:
-  - sharp
-  - unrs-resolver
+# sharp and unrs-resolver ship prebuilt platform binaries via optional
+# dependencies (@img/sharp-*, @oxc-resolver/*), so their native postinstall
+# scripts don't need to run. Setting allowBuilds to false acknowledges this
+# explicitly, which pnpm 10+ requires to avoid the fatal ERR_PNPM_IGNORED_BUILDS
+# under --frozen-lockfile.
+allowBuilds:
+  sharp: false
+  unrs-resolver: false

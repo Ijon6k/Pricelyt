@@ -6,17 +6,16 @@ import {
   TrendingUp,
   List,
   ExternalLink,
-  AlertCircle,
   Clock,
   Newspaper,
 } from "lucide-react";
 
 export default function TrackerDashboard({ tracker }) {
-  // Logic: Default ke 'table' jika data < 7, jika tidak 'chart'
-  const hasEnoughData = tracker.price_logs && tracker.price_logs.length >= 7;
+  // Show the chart as soon as there are at least 2 points to connect; fall
+  // back to the table view below that.
+  const hasEnoughData = tracker.price_logs && tracker.price_logs.length >= 2;
   const [activeTab, setActiveTab] = useState(hasEnoughData ? "chart" : "table");
 
-  // Formatters
   const formatCurrency = (val) =>
     new Intl.NumberFormat("en-US", {
       style: "currency",
@@ -29,55 +28,46 @@ export default function TrackerDashboard({ tracker }) {
       timeStyle: "short",
     });
 
+  const tabClass = (active, disabled) =>
+    [
+      "flex items-center gap-2 px-3 py-1.5 rounded-md text-sm font-medium transition-colors",
+      active
+        ? "bg-[rgb(var(--accent))] text-white"
+        : "text-[rgb(var(--muted))] hover:text-[rgb(var(--fg))]",
+      disabled ? "opacity-40 cursor-not-allowed" : "",
+    ].join(" ");
+
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
-      {/* --- LEFT COLUMN: MAIN CONTENT (Chart/Table) --- */}
-      <div className="lg:col-span-2 space-y-6">
-        {/* NAV TABS */}
-        <div className="flex items-center gap-2 p-1 rounded-xl bg-[rgb(var(--card))] border border-[rgb(var(--border))] w-fit shadow-sm">
+    <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
+      {/* LEFT: chart / table */}
+      <div className="lg:col-span-2 space-y-5">
+        <div className="flex items-center gap-1 p-1 rounded-lg bg-[rgb(var(--card))] border border-[rgb(var(--border))] w-fit">
           <button
             onClick={() => setActiveTab("chart")}
             disabled={!hasEnoughData}
-            className={`
-              flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold transition-all duration-300
-              ${
-                activeTab === "chart"
-                  ? "bg-[rgb(var(--accent))] text-white shadow-md"
-                  : "text-[rgb(var(--muted))] hover:text-[rgb(var(--fg))] hover:bg-[rgb(var(--bg))]"
-              }
-              ${!hasEnoughData ? "opacity-50 cursor-not-allowed" : ""}
-            `}
+            className={tabClass(activeTab === "chart", !hasEnoughData)}
           >
-            <TrendingUp size={16} />
-            Chart Analysis
+            <TrendingUp size={15} />
+            Chart
           </button>
           <button
             onClick={() => setActiveTab("table")}
-            className={`
-              flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold transition-all duration-300
-              ${
-                activeTab === "table"
-                  ? "bg-[rgb(var(--accent))] text-white shadow-md"
-                  : "text-[rgb(var(--muted))] hover:text-[rgb(var(--fg))] hover:bg-[rgb(var(--bg))]"
-              }
-            `}
+            className={tabClass(activeTab === "table", false)}
           >
-            <List size={16} />
-            History Logs
+            <List size={15} />
+            History
           </button>
         </div>
 
-        {/* CONTENT AREA */}
-        <div className="bg-[rgb(var(--card))] border border-[rgb(var(--border))] rounded-2xl shadow-sm overflow-hidden min-h-[450px]">
-          {/* VIEW: CHART */}
+        <div className="bg-[rgb(var(--card))] border border-[rgb(var(--border))] rounded-xl overflow-hidden min-h-[420px]">
           {activeTab === "chart" && (
             <div className="p-6 h-full flex flex-col">
-              <div className="mb-6">
-                <h3 className="text-lg font-bold text-[rgb(var(--fg))]">
-                  Price Trend
+              <div className="mb-5">
+                <h3 className="text-base font-semibold text-[rgb(var(--fg))]">
+                  Price trend
                 </h3>
                 <p className="text-sm text-[rgb(var(--muted))]">
-                  Visualizing market price changes over time.
+                  Market price over time.
                 </p>
               </div>
               <div className="flex-grow">
@@ -86,46 +76,44 @@ export default function TrackerDashboard({ tracker }) {
             </div>
           )}
 
-          {/* VIEW: TABLE */}
           {activeTab === "table" && (
             <div className="flex flex-col h-full">
               <div className="p-6 border-b border-[rgb(var(--border))]">
-                <h3 className="text-lg font-bold text-[rgb(var(--fg))]">
-                  Detailed Logs
+                <h3 className="text-base font-semibold text-[rgb(var(--fg))]">
+                  History
                 </h3>
                 <p className="text-sm text-[rgb(var(--muted))]">
-                  Showing {tracker.price_logs?.length || 0} recorded data
-                  points.
+                  {tracker.price_logs?.length || 0} recorded data points.
                 </p>
               </div>
               <div className="overflow-x-auto">
                 {!tracker.price_logs || tracker.price_logs.length === 0 ? (
-                  <div className="p-10 text-center text-[rgb(var(--muted))] italic">
-                    No price history data available yet.
+                  <div className="p-10 text-center text-sm text-[rgb(var(--muted))]">
+                    No price history yet.
                   </div>
                 ) : (
                   <table className="w-full text-sm text-left">
-                    <thead className="bg-[rgb(var(--bg))]/50 text-[rgb(var(--muted))] font-semibold uppercase text-xs tracking-wider">
+                    <thead className="text-[rgb(var(--muted))] text-xs uppercase tracking-wider border-b border-[rgb(var(--border))]">
                       <tr>
-                        <th className="px-6 py-4">Date Scraped</th>
-                        <th className="px-6 py-4">Market Price</th>
-                        <th className="px-6 py-4">Samples</th>
+                        <th className="px-6 py-3 font-medium">Date</th>
+                        <th className="px-6 py-3 font-medium">Market price</th>
+                        <th className="px-6 py-3 font-medium">Samples</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-[rgb(var(--border))]">
                       {[...tracker.price_logs].reverse().map((log) => (
                         <tr
                           key={log.id}
-                          className="hover:bg-[rgb(var(--bg))]/30 transition-colors"
+                          className="hover:bg-[rgb(var(--bg))] transition-colors"
                         >
-                          <td className="px-6 py-4 text-[rgb(var(--fg))] font-medium">
+                          <td className="px-6 py-3 text-[rgb(var(--muted))]">
                             {formatDate(log.scraped_at)}
                           </td>
-                          <td className="px-6 py-4 text-[rgb(var(--fg))]">
+                          <td className="px-6 py-3 font-medium text-[rgb(var(--fg))] tabular-nums">
                             {formatCurrency(log.market_price)}
                           </td>
-                          <td className="px-6 py-4 text-[rgb(var(--muted))]">
-                            {log.sample_count} items
+                          <td className="px-6 py-3 text-[rgb(var(--muted))]">
+                            {log.sample_count}
                           </td>
                         </tr>
                       ))}
@@ -138,27 +126,25 @@ export default function TrackerDashboard({ tracker }) {
         </div>
       </div>
 
-      {/* --- RIGHT COLUMN: NEWS FEED (SCROLLABLE) --- */}
-      <div className="lg:col-span-1 h-full">
-        <div className="sticky top-4 bg-[rgb(var(--card))] border border-[rgb(var(--border))] rounded-2xl shadow-sm flex flex-col max-h-[calc(100vh-2rem)]">
-          {/* News Header */}
-          <div className="p-5 border-b border-[rgb(var(--border))] bg-[rgb(var(--card))] z-10 rounded-t-2xl flex items-center justify-between">
+      {/* RIGHT: news */}
+      <div className="lg:col-span-1">
+        <div className="sticky top-20 bg-[rgb(var(--card))] border border-[rgb(var(--border))] rounded-xl flex flex-col max-h-[calc(100vh-6rem)]">
+          <div className="p-4 border-b border-[rgb(var(--border))] flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <Newspaper size={18} className="text-[rgb(var(--accent))]" />
-              <h3 className="font-bold text-[rgb(var(--fg))]">Latest News</h3>
+              <Newspaper size={16} className="text-[rgb(var(--muted))]" />
+              <h3 className="text-sm font-semibold text-[rgb(var(--fg))]">
+                Related news
+              </h3>
             </div>
-            <span className="text-xs bg-[rgb(var(--accent-soft))] text-[rgb(var(--accent))] px-2 py-1 rounded-full font-bold">
+            <span className="text-xs text-[rgb(var(--muted))]">
               {tracker.news_logs?.length || 0}
             </span>
           </div>
 
-          {/* Scrollable List */}
-          <div className="overflow-y-auto p-4 space-y-3 custom-scrollbar">
+          <div className="overflow-y-auto p-3 space-y-2 custom-scrollbar">
             {!tracker.news_logs || tracker.news_logs.length === 0 ? (
-              <div className="py-12 text-center border-2 border-dashed border-[rgb(var(--border))] rounded-xl">
-                <p className="text-[rgb(var(--muted))] text-sm">
-                  No related news found.
-                </p>
+              <div className="py-10 text-center text-sm text-[rgb(var(--muted))]">
+                No related news found.
               </div>
             ) : (
               tracker.news_logs.map((news) => (
@@ -167,42 +153,38 @@ export default function TrackerDashboard({ tracker }) {
                   href={news.source_url}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="group block p-4 rounded-xl bg-[rgb(var(--bg))]/30 border border-[rgb(var(--border))] hover:border-[rgb(var(--accent))] hover:bg-[rgb(var(--card))] transition-all duration-200"
+                  className="group block p-3 rounded-lg border border-[rgb(var(--border))] hover:border-[rgb(var(--accent))] transition-colors no-underline"
                 >
-                  <div className="flex flex-col gap-2">
-                    {news.is_blocked && (
-                      <span className="w-fit flex items-center gap-1 text-[9px] font-bold text-red-600 bg-red-100 px-1.5 py-0.5 rounded uppercase">
-                        <AlertCircle size={10} /> Blocked
-                      </span>
-                    )}
-                    <h4 className="font-bold text-sm text-[rgb(var(--fg))] group-hover:text-[rgb(var(--accent))] leading-snug line-clamp-2">
-                      {news.title || "No Title Available"}
-                    </h4>
-                    <p className="text-xs text-[rgb(var(--muted))] line-clamp-2">
-                      {news.content}
-                    </p>
-                    <div className="flex items-center gap-2 text-[10px] text-[rgb(var(--muted))] mt-1">
-                      <span className="flex items-center gap-1 truncate max-w-[100px]">
-                        <ExternalLink size={10} />
-                        {new URL(news.source_url).hostname}
-                      </span>
-                      <span>•</span>
-                      <span className="flex items-center gap-1">
-                        <Clock size={10} />
-                        {new Date(news.scraped_at).toLocaleDateString(
-                          undefined,
-                          { month: "short", day: "numeric" },
-                        )}
-                      </span>
-                    </div>
+                  <h4 className="font-medium text-sm text-[rgb(var(--fg))] group-hover:text-[rgb(var(--accent))] leading-snug line-clamp-2 transition-colors">
+                    {news.title || "Untitled"}
+                  </h4>
+                  <p className="text-xs text-[rgb(var(--muted))] line-clamp-2 mt-1">
+                    {news.content}
+                  </p>
+                  <div className="flex items-center gap-2 text-[11px] text-[rgb(var(--muted))] mt-2">
+                    <span className="flex items-center gap-1 truncate max-w-[120px]">
+                      <ExternalLink size={11} />
+                      {(() => {
+                        try {
+                          return new URL(news.source_url).hostname;
+                        } catch {
+                          return "source";
+                        }
+                      })()}
+                    </span>
+                    <span>·</span>
+                    <span className="flex items-center gap-1">
+                      <Clock size={11} />
+                      {new Date(news.scraped_at).toLocaleDateString("en-US", {
+                        month: "short",
+                        day: "numeric",
+                      })}
+                    </span>
                   </div>
                 </a>
               ))
             )}
           </div>
-
-          {/* Fade Effect at Bottom */}
-          <div className="absolute bottom-0 left-0 right-0 h-8 bg-gradient-to-t from-[rgb(var(--card))] to-transparent pointer-events-none rounded-b-2xl"></div>
         </div>
       </div>
     </div>

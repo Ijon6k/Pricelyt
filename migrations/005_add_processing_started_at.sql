@@ -1,2 +1,2 @@
 ALTER TABLE trackers
-ADD COLUMN processing_started_at TIMESTAMP;
+ADD COLUMN IF NOT EXISTS processing_started_at TIMESTAMP;

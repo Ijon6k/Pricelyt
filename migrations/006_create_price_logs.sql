@@ -1,4 +1,4 @@
-CREATE TABLE price_logs (
+CREATE TABLE IF NOT EXISTS price_logs (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     tracker_id UUID NOT NULL REFERENCES trackers(id) ON DELETE CASCADE,
 
@@ -12,5 +12,5 @@ CREATE TABLE price_logs (
     created_at TIMESTAMP NOT NULL DEFAULT NOW()
 );
 
-CREATE INDEX idx_price_logs_tracker_time
+CREATE INDEX IF NOT EXISTS idx_price_logs_tracker_time
 ON price_logs (tracker_id, scraped_at DESC);

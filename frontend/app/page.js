@@ -5,76 +5,52 @@ import { fetchTrackers } from "./lib/api";
 export const dynamic = "force-dynamic";
 
 export default async function HomePage() {
-    // 1. Inisialisasi default array kosong
     let trackers = [];
 
     try {
         const data = await fetchTrackers();
-        // 2. SAFETY CHECK: Kalau data null/undefined, paksa jadi array kosong []
         trackers = data || [];
     } catch (error) {
-        console.error("Gagal load trackers:", error);
-        // Kalau error, trackers tetep [] karena inisialisasi di atas
+        console.error("Failed to load trackers:", error);
     }
 
     return (
         <main className="min-h-screen">
             {/* HERO */}
-            <section className="border-b border-[rgb(var(--border))] bg-[rgb(var(--bg))]">
-                <div className="max-w-5xl mx-auto px-6 py-24 text-center">
-                    <div
-                        className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full
-            border border-[rgb(var(--border))] bg-[rgb(var(--card))] mb-8"
-                    >
-                        <span className="w-2 h-2 rounded-full bg-green-500" />
-                        <span className="text-xs tracking-widest text-green-600">
-                            SYSTEM OPERATIONAL
-                        </span>
-                    </div>
-
-                    <h1 className="text-6xl md:text-7xl font-extrabold tracking-tight mb-6">
-                        Market <br />
-                        <span className="text-[rgb(var(--accent))]">
-                            Intelligence
-                        </span>
+            <section className="border-b border-[rgb(var(--border))]">
+                <div className="max-w-3xl mx-auto px-6 pt-32 pb-20 text-center">
+                    <h1 className="text-4xl md:text-5xl font-semibold tracking-tight mb-4">
+                        Track any product&rsquo;s price over time
                     </h1>
-
-                    <p className="text-[rgb(var(--muted))] text-lg mb-2">
-                        Harga historis dan analisis AI dalam satu dashboard
-                        futuristik.
+                    <p className="text-[rgb(var(--muted))] text-lg mb-10 max-w-xl mx-auto">
+                        Search a product, and Pricelyt monitors its market price
+                        and related news automatically.
                     </p>
-
-                    <p className="italic text-[rgb(var(--muted))] mb-12">
-                        Tanpa gangguan. Tanpa noise.
-                    </p>
-
                     <SearchBar />
                 </div>
             </section>
 
             {/* TRACKERS */}
-            <section className="max-w-7xl mx-auto px-6 py-20">
-                <div className="flex items-center justify-between mb-10">
-                    <h2 className="text-xl font-bold tracking-wider uppercase">
-                        Active Trackers
+            <section className="max-w-6xl mx-auto px-6 py-16">
+                <div className="flex items-baseline justify-between mb-8">
+                    <h2 className="text-sm font-semibold uppercase tracking-wider text-[rgb(var(--muted))]">
+                        Active trackers
                     </h2>
                     <span className="text-sm text-[rgb(var(--muted))]">
-                        {/* AMAN: Karena trackers pasti array, .length gak bakal error */}
-                        {trackers?.length || 0} monitored assets
+                        {trackers?.length || 0} tracked
                     </span>
                 </div>
 
-                {/* AMAN: Cek length dulu */}
                 {trackers && trackers.length > 0 ? (
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-10">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
                         {trackers.map((tracker) => (
                             <TrackerCard key={tracker.id} tracker={tracker} />
                         ))}
                     </div>
                 ) : (
-                    <div className="py-32 text-center border border-dashed border-[rgb(var(--border))] rounded-2xl bg-[rgb(var(--card))] shadow-sm">
+                    <div className="py-24 text-center border border-dashed border-[rgb(var(--border))] rounded-xl">
                         <p className="text-[rgb(var(--muted))]">
-                            Belum ada tracker. Mulai dengan mencari produk.
+                            No trackers yet. Search a product to start.
                         </p>
                     </div>
                 )}

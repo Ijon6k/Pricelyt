@@ -15,7 +15,7 @@ func NewRouter(db *sqlx.DB) http.Handler {
 	apiMux := http.NewServeMux()
 
 	// health
-	apiMux.HandleFunc(" GET /health", health.Handler(db))
+	apiMux.HandleFunc("GET /health", health.Handler(db))
 
 	// tracker
 	repo := tracker.NewRepository(db)

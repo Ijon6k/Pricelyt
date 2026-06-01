@@ -66,6 +66,7 @@ func (h *Handler) AddTracker(w http.ResponseWriter, r *http.Request) {
 	var req AddTrackerRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		http.Error(w, "Wrong Format Json", http.StatusBadRequest)
+		return
 	}
 
 	result, err := h.service.AddTracker(r.Context(), req.Keyword)

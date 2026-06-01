@@ -1,4 +1,4 @@
-CREATE TABLE news_logs (
+CREATE TABLE IF NOT EXISTS news_logs (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     tracker_id UUID NOT NULL REFERENCES trackers(id) ON DELETE CASCADE,
 
@@ -12,5 +12,5 @@ CREATE TABLE news_logs (
     created_at TIMESTAMP NOT NULL DEFAULT NOW()
 );
 
-CREATE INDEX idx_news_logs_tracker_time
+CREATE INDEX IF NOT EXISTS idx_news_logs_tracker_time
 ON news_logs (tracker_id, scraped_at DESC);

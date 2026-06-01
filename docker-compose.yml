@@ -3,49 +3,111 @@ services:
     image: postgres:16
     container_name: pricelyt_postgres
     environment:
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgres
-      POSTGRES_DB: pricelyt_db
-    ports:
-      - "5432:5432"
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
+      POSTGRES_DB: ${POSTGRES_DB:-pricelyt_db}
     volumes:
       - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-postgres} -d ${POSTGRES_DB:-pricelyt_db}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    restart: unless-stopped
     logging:
       driver: journald
 
   migrate:
     image: postgres:16
     depends_on:
-      - postgres
+      postgres:
+        condition: service_healthy
     volumes:
-      - ./migrations:/migrations
+      - ./migrations:/migrations:ro
     environment:
-      PGPASSWORD: postgres
+      PGPASSWORD: ${POSTGRES_PASSWORD:-postgres}
+    # Run every migration in sorted order. ON_ERROR_STOP makes a real SQL error
+    # fail the container (migrations are idempotent so re-runs are safe).
     command: >
       bash -c "
+      set -e;
       for f in /migrations/*.sql; do
         echo Running $$f;
-        psql -h postgres -U postgres -d pricelyt_db -f $$f;
+        psql -h postgres -U ${POSTGRES_USER:-postgres} -d ${POSTGRES_DB:-pricelyt_db} -v ON_ERROR_STOP=1 -f $$f;
       done
       "
     restart: "no"
     logging:
       driver: journald
 
+  api:
+    build: ./backend/api-go
+    container_name: pricelyt_api
+    depends_on:
+      postgres:
+        condition: service_healthy
+      migrate:
+        condition: service_completed_successfully
+    environment:
+      APP_PORT: "8080"
+      DATABASE_URL: postgres://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-postgres}@postgres:5432/${POSTGRES_DB:-pricelyt_db}?sslmode=disable
+      ADMIN_KEY: ${ADMIN_KEY:-change-me}
+      CORS_ORIGINS: ${CORS_ORIGINS:-http://localhost:4444}
+    expose:
+      - "8080"
+    restart: unless-stopped
+    logging:
+      driver: journald
+
   scraper:
     build: ./backend/worker-python/scraper
-    volumes:
-      - ./backend/worker-python/scraper:/app
-    environment:
-      DATABASE_URL: postgres://postgres:postgres@postgres:5432/pricelyt_db
+    container_name: pricelyt_scraper
     depends_on:
-      - migrate
+      postgres:
+        condition: service_healthy
+      migrate:
+        condition: service_completed_successfully
+    environment:
+      DATABASE_URL: postgres://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-postgres}@postgres:5432/${POSTGRES_DB:-pricelyt_db}
+      IDR_TO_USD_RATE: ${IDR_TO_USD_RATE:-16200}
     restart: unless-stopped
-
     tmpfs:
       - /tmp
       - /var/tmp
+    logging:
+      driver: journald
 
+  frontend:
+    build: ./frontend
+    container_name: pricelyt_frontend
+    depends_on:
+      - api
+    environment:
+      # Server-side (SSR inside the container) talks to the API directly.
+      API_BASE_INTERNAL: http://api:8080/api
+      # Client-side uses a relative path; nginx proxies /api to the Go service.
+      NEXT_PUBLIC_API_BASE: /api
+      # Admin key for the delete server action. Held server-side only — never
+      # exposed to the browser. Must match the API's ADMIN_KEY.
+      ADMIN_KEY: ${ADMIN_KEY:-change-me}
+      NODE_ENV: production
+    expose:
+      - "3000"
+    restart: unless-stopped
+    logging:
+      driver: journald
+
+  nginx:
+    image: nginx:1.27-alpine
+    container_name: pricelyt_nginx
+    depends_on:
+      - frontend
+      - api
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+    ports:
+      - "4444:80"
+    restart: unless-stopped
     logging:
       driver: journald
 

@@ -34,4 +34,4 @@ RUN playwright install chromium
 COPY . .
 
 
-CMD ["sleep", "infinity"]
+CMD ["python", "-u", "main.py"]
