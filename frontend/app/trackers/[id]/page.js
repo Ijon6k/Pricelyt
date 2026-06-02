@@ -1,6 +1,8 @@
 import Link from "next/link";
 import { fetchTrackerDetail } from "@/app/lib/api";
 import TrackerDashboard from "@/app/components/TrackerDashboard";
+import DealScore from "@/app/components/DealScore";
+import PriceTrend from "@/app/components/PriceTrend";
 import DeleteTrackerButton from "@/app/components/DeleteTrackerButton";
 import AutoRefresh from "@/app/components/AutoRefresh";
 import {
@@ -128,6 +130,12 @@ export default async function TrackerDetailPage({ params }) {
                   {formatDate(tracker.created_at)}
                 </div>
               </div>
+            </div>
+
+            {/* DEAL SCORE + TREND */}
+            <div className="flex items-center gap-3 mt-2">
+              <DealScore priceLogs={tracker.price_logs} />
+              <PriceTrend priceLogs={tracker.price_logs} />
             </div>
           </div>
         </div>
