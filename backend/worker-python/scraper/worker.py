@@ -25,10 +25,29 @@ from scraper_price import scrape_price as scrape_amazon
 # ---------------- logging ----------------
 
 logger = logging.getLogger("worker")
-logging.basicConfig(
-    level=logging.INFO,
-    format="%(asctime)s [%(levelname)s] %(message)s",
-)
+
+# Structured JSON logging when running in container (detect by JOURNAL_STREAM env)
+if os.environ.get("JOURNAL_STREAM") or os.environ.get("STRUCTURED_LOGS"):
+    class JSONFormatter(logging.Formatter):
+        def format(self, record):
+            import json
+            log = {
+                "time": self.formatTime(record),
+                "level": record.levelname,
+                "message": record.getMessage(),
+                "logger": record.name,
+            }
+            if record.exc_info and record.exc_info[0]:
+                log["exception"] = self.formatException(record.exc_info)
+            return json.dumps(log)
+    handler = logging.StreamHandler()
+    handler.setFormatter(JSONFormatter())
+    logger.handlers = [handler]
+else:
+    logging.basicConfig(
+        level=logging.INFO,
+        format="%(asctime)s [%(levelname)s] %(message)s",
+    )
 
 SLEEP_IDLE_SECONDS = 5
 MAX_AMAZON_RETRIES = 2  # Gagal 2x -> Pindah ke eBay

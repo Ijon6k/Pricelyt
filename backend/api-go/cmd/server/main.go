@@ -1,13 +1,13 @@
 package main
 
 import (
-	"log"
+	"log/slog"
 	"net/http"
 	"os"
 	"strings"
 
-	"api/internal/db"
 	"api/internal/auth"
+	"api/internal/db"
 	apihttp "api/internal/http"
 
 	"github.com/joho/godotenv"
@@ -15,16 +15,24 @@ import (
 )
 
 func main() {
+	// Structured JSON logger
+	logger := slog.New(slog.NewJSONHandler(os.Stderr, &slog.HandlerOptions{
+		Level: slog.LevelInfo,
+	}))
+	slog.SetDefault(logger)
+
 	_ = godotenv.Load("../../.env")
 
 	dsn := os.Getenv("DATABASE_URL")
 	if dsn == "" {
-		log.Fatal("DATABASE_URL is not set")
+		slog.Error("DATABASE_URL is not set")
+		os.Exit(1)
 	}
 
 	conn, err := db.NewPostgres(dsn)
 	if err != nil {
-		log.Fatal(err)
+		slog.Error("failed to connect to database", "error", err)
+		os.Exit(1)
 	}
 
 	var addr, dbname string
@@ -32,12 +40,14 @@ func main() {
 		"SELECT inet_server_addr()::text, current_database()",
 	).Scan(&addr, &dbname)
 	if err != nil {
-		log.Fatal(err)
+		slog.Error("failed to query db info", "error", err)
+		os.Exit(1)
 	}
 
-	log.Println("API CONNECTED TO DB:")
-	log.Println("  address :", addr)
-	log.Println("  database:", dbname)
+	slog.Info("connected to database",
+		"address", addr,
+		"database", dbname,
+	)
 
 	router := apihttp.NewRouter(conn)
 
@@ -47,7 +57,6 @@ func main() {
 		jwtSecret = "pricelyt-jwt-secret-change-in-production"
 	}
 	auth.Init(jwtSecret)
-
 
 	// Allowed CORS origins come from env (comma-separated). Behind the
 	// nginx reverse proxy the frontend and API share an origin, so CORS
@@ -71,7 +80,10 @@ func main() {
 		port = "8080"
 	}
 
-	log.Println("API running on :" + port)
+	slog.Info("API starting", "port", port)
 
-	log.Fatal(http.ListenAndServe(":"+port, handler))
+	if err := http.ListenAndServe(":"+port, handler); err != nil {
+		slog.Error("server failed", "error", err)
+		os.Exit(1)
+	}
 }
