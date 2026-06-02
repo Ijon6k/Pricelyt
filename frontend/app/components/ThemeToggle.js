@@ -1,21 +1,20 @@
 "use client";
 
+import { useState } from "react";
 import { Sun, Moon } from "lucide-react";
-import { useState, useEffect } from "react";
 
 export default function ThemeToggle() {
-  const [isDark, setIsDark] = useState(false);
-  const [mounted, setMounted] = useState(false);
-
-  useEffect(() => {
-    setMounted(true);
+  // Lazy init from localStorage — runs once before first render.
+  // No effect needed. suppressHydrationWarning on <html> handles the mismatch.
+  const [isDark, setIsDark] = useState(() => {
+    if (typeof window === "undefined") return false;
     const stored = localStorage.getItem("theme");
     const dark =
       stored === "dark" ||
       (!stored && window.matchMedia("(prefers-color-scheme: dark)").matches);
-    setIsDark(dark);
     document.documentElement.setAttribute("data-theme", dark ? "dark" : "light");
-  }, []);
+    return dark;
+  });
 
   const toggle = () => {
     const next = !isDark;
@@ -23,11 +22,6 @@ export default function ThemeToggle() {
     document.documentElement.setAttribute("data-theme", next ? "dark" : "light");
     localStorage.setItem("theme", next ? "dark" : "light");
   };
-
-  // Avoid hydration mismatch — render a placeholder until mounted.
-  if (!mounted) {
-    return <div className="w-8 h-8" />;
-  }
 
   return (
     <button

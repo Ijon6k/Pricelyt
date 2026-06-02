@@ -1,45 +1,53 @@
 "use client";
 
-import { createContext, useContext, useState, useEffect, useCallback } from "react";
+import { createContext, useContext, useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
 
 const AuthContext = createContext(null);
 
-export function AuthProvider({ children }) {
-  const [user, setUser] = useState(null);
-  const [token, setToken] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const router = useRouter();
-
-  useEffect(() => {
-    const savedToken = localStorage.getItem("pricelyt_token");
-    const savedUser = localStorage.getItem("pricelyt_user");
-    if (savedToken && savedUser) {
-      setToken(savedToken);
-      try {
-        setUser(JSON.parse(savedUser));
-      } catch {
-        localStorage.removeItem("pricelyt_token");
-        localStorage.removeItem("pricelyt_user");
-      }
+function loadAuth() {
+  if (typeof window === "undefined") return { token: null, user: null };
+  const savedToken = localStorage.getItem("pricelyt_token");
+  const savedUser = localStorage.getItem("pricelyt_user");
+  let user = null;
+  if (savedToken && savedUser) {
+    try {
+      user = JSON.parse(savedUser);
+    } catch {
+      localStorage.removeItem("pricelyt_token");
+      localStorage.removeItem("pricelyt_user");
     }
-    setLoading(false);
-  }, []);
+  }
+  return {
+    token: savedToken && user ? savedToken : null,
+    user,
+  };
+}
+
+export function AuthProvider({ children }) {
+  // Synchronous read from localStorage — no useEffect needed.
+  const [state, setState] = useState(() => {
+    const { token, user } = loadAuth();
+    return { token, user };
+  });
 
   const login = useCallback((newToken, newUser) => {
     localStorage.setItem("pricelyt_token", newToken);
     localStorage.setItem("pricelyt_user", JSON.stringify(newUser));
-    setToken(newToken);
-    setUser(newUser);
+    setState({ token: newToken, user: newUser });
   }, []);
 
+  const router = useRouter();
   const logout = useCallback(() => {
     localStorage.removeItem("pricelyt_token");
     localStorage.removeItem("pricelyt_user");
-    setToken(null);
-    setUser(null);
+    setState({ token: null, user: null });
     router.push("/");
   }, [router]);
+
+  const { token, user } = state;
+  // No loading state — sync init means we always have the answer immediately.
+  const loading = false;
 
   const authFetch = useCallback(async (url, options = {}) => {
     const headers = { ...options.headers };

@@ -17,7 +17,7 @@ export default function Logo() {
           strokeLinejoin="round"
         />
       </svg>
-      <span className="text-base font-semibold tracking-tight" style={{ fontFamily: 'var(--font-serif)' }}>
+      <span className="text-base font-semibold tracking-tight text-[rgb(var(--fg))]" style={{ fontFamily: 'var(--font-serif)' }}>
         Pricelyt
       </span>
     </div>

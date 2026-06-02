@@ -1,8 +1,31 @@
 import "./globals.css";
+import Link from "next/link";
+import { DM_Serif_Display, Inter, JetBrains_Mono } from "next/font/google";
 import ThemeToggle from "./components/ThemeToggle";
 import Logo from "./components/Logo";
 import AuthProvider from "./components/AuthProvider";
 import HeaderAuth from "./components/HeaderAuth";
+
+const dmSerif = DM_Serif_Display({
+  subsets: ["latin"],
+  weight: ["400"],
+  variable: "--font-serif",
+  display: "swap",
+});
+
+const inter = Inter({
+  subsets: ["latin"],
+  weight: ["400", "500", "600", "700"],
+  variable: "--font-sans",
+  display: "swap",
+});
+
+const jetbrains = JetBrains_Mono({
+  subsets: ["latin"],
+  weight: ["400", "600"],
+  variable: "--font-mono",
+  display: "swap",
+});
 
 export const metadata = {
   title: "Pricelyt — Price intelligence",
@@ -12,22 +35,18 @@ export const metadata = {
 
 export default function RootLayout({ children }) {
   return (
-    <html lang="en" suppressHydrationWarning>
-      <head>
-        <link rel="preconnect" href="https://fonts.googleapis.com" />
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
-        <link
-          href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap"
-          rel="stylesheet"
-        />
-      </head>
+    <html
+      lang="en"
+      suppressHydrationWarning
+      className={`${dmSerif.variable} ${inter.variable} ${jetbrains.variable}`}
+    >
       <body className="min-h-screen flex flex-col">
         <AuthProvider>
           <header className="fixed top-0 inset-x-0 z-50 border-b border-[rgb(var(--border))] bg-[rgb(var(--bg))]/90 backdrop-blur-sm">
             <div className="max-w-6xl mx-auto px-6 h-16 flex items-center justify-between">
-              <a href="/" className="no-underline">
+              <Link href="/" className="no-underline">
                 <Logo />
-              </a>
+              </Link>
               <div className="flex items-center gap-4">
                 <HeaderAuth />
                 <ThemeToggle />

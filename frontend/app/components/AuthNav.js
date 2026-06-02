@@ -1,14 +1,37 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useSyncExternalStore } from "react";
 import Link from "next/link";
 import { useAuth } from "../lib/AuthContext";
 
+// Minimal store: emits a value only once when the client mounts.
+function createClientStore() {
+  let value = false;
+  const listeners = new Set();
+  return {
+    subscribe(cb) {
+      listeners.add(cb);
+      return () => listeners.delete(cb);
+    },
+    getSnapshot() {
+      if (typeof document !== "undefined" && !value) {
+        value = true;
+        listeners.forEach((fn) => fn());
+      }
+      return value;
+    },
+  };
+}
+
+const clientStore = createClientStore();
+
 export default function AuthNav() {
   const { user, logout } = useAuth();
-  const [mounted, setMounted] = useState(false);
-
-  useEffect(() => { setMounted(true); }, []);
+  const mounted = useSyncExternalStore(
+    clientStore.subscribe,
+    clientStore.getSnapshot,
+    () => false // server snapshot
+  );
 
   if (!mounted) return null;
 

@@ -1,5 +1,6 @@
 import Link from "next/link";
 import Sparkline from "./Sparkline";
+import SourceBadge from "./SourceBadge";
 import {
   Eye,
   AlertTriangle,
@@ -98,6 +99,9 @@ export default function TrackerRow({ tracker, rank }) {
               <span className="text-[10px] text-[rgb(var(--accent))] font-medium shrink-0">
                 @{user_name}
               </span>
+            )}
+            {latestLog?.source && (
+              <SourceBadge source={latestLog.source} />
             )}
           </div>
         </div>

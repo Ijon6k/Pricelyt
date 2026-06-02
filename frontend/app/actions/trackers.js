@@ -2,6 +2,7 @@
 
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
+import { cookies } from "next/headers";
 
 // Server-side only: talks to the API over the internal Docker network and
 // holds the admin key in the server environment. The browser never sees the
@@ -11,9 +12,19 @@ function getInternalBase() {
 }
 
 export async function deleteTrackerAction(id) {
+  const cookieStore = await cookies();
+  const token = cookieStore.get("token")?.value;
+
+  // Auth check: rely on the API to verify the JWT. If there's no token at all,
+  // we short-circuit here instead of making a round trip.
+  if (!token) {
+    throw new Error("Authentication required");
+  }
+
   const res = await fetch(`${getInternalBase()}/trackers/${id}`, {
     method: "DELETE",
     headers: {
+      Authorization: `Bearer ${token}`,
       "X-Admin-Key": process.env.ADMIN_KEY || "change-me",
     },
     cache: "no-store",

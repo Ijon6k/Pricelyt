@@ -2,9 +2,22 @@ import Link from "next/link";
 import { fetchTrackerDetail } from "@/app/lib/api";
 import TrackerDashboard from "@/app/components/TrackerDashboard";
 import DealScore from "@/app/components/DealScore";
+import SourceBadge from "@/app/components/SourceBadge";
 import { ArrowLeft, Eye, Calendar } from "lucide-react";
 import AutoRefresh from "@/app/components/AutoRefresh";
 import DeleteTrackerButton from "@/app/components/DeleteTrackerButton";
+
+// Inline stat component for the summary block
+function Stat({ label, value }) {
+  return (
+    <div className="flex flex-col">
+      <span className="editorial-label">{label}</span>
+      <span className="text-sm font-semibold tabular-nums text-[rgb(var(--fg))] mt-0.5">
+        {value}
+      </span>
+    </div>
+  );
+}
 
 const formatCurrency = (val) =>
   new Intl.NumberFormat("en-US", {
@@ -88,6 +101,7 @@ export default async function TrackerDetailPage({ params }) {
           {/* Meta row */}
           <div className="flex items-center gap-4 mb-4">
             <StatusBadge status={tracker.status} />
+            {latestLog?.source && <SourceBadge source={latestLog.source} />}
             {dataPoints > 0 && (
               <div className="flex items-center gap-1.5 text-[11px] text-[rgb(var(--muted))]">
                 <div className="flex items-center gap-1">
@@ -146,6 +160,32 @@ export default async function TrackerDetailPage({ params }) {
           <div className="flex items-center gap-4 flex-wrap">
             <DealScore priceLogs={tracker.price_logs} />
           </div>
+
+          {/* ── SUMMARY STATS ── */}
+          {tracker.price_logs && tracker.price_logs.length >= 2 && (
+            <div className="flex items-center gap-6 mt-6 pt-6 border-t border-[rgb(var(--border))]">
+              {(() => {
+                const prices = tracker.price_logs.map((l) => l.market_price);
+                const avg = prices.reduce((a, b) => a + b, 0) / prices.length;
+                const min = Math.min(...prices);
+                const max = Math.max(...prices);
+                // Simple volatility: stddev / mean * 100
+                const variance = prices.reduce((s, p) => s + (p - avg) ** 2, 0) / prices.length;
+                const stddev = Math.sqrt(variance);
+                const volatility = avg > 0 ? (stddev / avg) * 100 : 0;
+
+                return (
+                  <>
+                    <Stat label="Average" value={formatCurrency(avg)} />
+                    <Stat label="Min" value={formatCurrency(min)} />
+                    <Stat label="Max" value={formatCurrency(max)} />
+                    <Stat label="Volatility" value={`${volatility.toFixed(1)}%`} />
+                    <Stat label="Data points" value={String(tracker.price_logs.length)} />
+                  </>
+                );
+              })()}
+            </div>
+          )}
         </div>
 
         {/* ── ERROR BANNER ── */}
