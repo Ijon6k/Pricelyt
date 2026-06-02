@@ -17,6 +17,7 @@ export default function TrackerCard({ tracker }) {
     created_at,
     view_count = 0,
     error_count = 0,
+    user_name,
     price_logs = [],
   } = tracker || {};
 
@@ -93,7 +94,14 @@ export default function TrackerCard({ tracker }) {
       <div className="h-full flex flex-col bg-[rgb(var(--card))] border border-[rgb(var(--border))] rounded-xl p-5 transition-all hover:border-[rgb(var(--accent))]/50 hover:shadow-sm">
         {/* HEADER */}
         <div className="flex items-center justify-between mb-4">
-          <span className="text-xs text-[rgb(var(--muted))]">{formattedDate}</span>
+          <div className="flex items-center gap-2">
+            <span className="text-xs text-[rgb(var(--muted))]">{formattedDate}</span>
+            {user_name && (
+              <span className="text-[10px] font-medium text-[rgb(var(--accent))]">
+                @{user_name}
+              </span>
+            )}
+          </div>
           <span
             className={`flex items-center px-2 py-0.5 rounded-full text-[10px] font-medium tracking-wide uppercase ${statusConfig.style}`}
           >
