@@ -3,7 +3,6 @@ package tracker
 import (
 	"encoding/json"
 	"net/http"
-	"strings"
 )
 
 type Handler struct {
@@ -44,13 +43,11 @@ func (h *Handler) GetTrackers(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *Handler) GetTrackerByID(w http.ResponseWriter, r *http.Request) {
-	parts := strings.Split(strings.Trim(r.URL.Path, "/"), "/")
-	if len(parts) != 2 {
+	id := r.PathValue("id")
+	if id == "" {
 		http.NotFound(w, r)
 		return
 	}
-
-	id := parts[1]
 
 	trackerDetail, err := h.service.GetTrackerDetailByID(id)
 	if err != nil {

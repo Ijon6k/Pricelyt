@@ -19,7 +19,7 @@ type PriceLog struct {
 	MarketPrice int       `db:"market_price" json:"market_price"`
 	MinPrice    int       `db:"min_price" json:"min_price"`
 	MaxPrice    int       `db:"max_price" json:"max_price"`
-	MedianPrice int       `db:"median_price" json:"median_price"`
+	MedianPrice *int      `db:"median_price" json:"median_price"`
 	SampleCount int       `db:"sample_count" json:"sample_count"`
 	ScrapedAt   time.Time `db:"scraped_at" json:"scraped_at"`
 }

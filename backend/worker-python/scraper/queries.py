@@ -4,6 +4,10 @@ FROM trackers
 WHERE
     status = 'PENDING'
     OR (
+        status = 'ERROR'
+        AND COALESCE(error_count, 0) < 3
+    )
+    OR (
         status = 'READY'
         AND (
             last_scraped_at IS NULL
@@ -56,6 +60,14 @@ INSERT INTO price_logs (
     scraped_at
 )
 VALUES (%s, %s, %s, %s, %s, %s, NOW());
+"""
+
+SQL_REAPER_PROCESSING_TIMEOUT = """
+UPDATE trackers
+SET status = 'PENDING',
+    processing_started_at = NULL
+WHERE status = 'PROCESSING'
+    AND processing_started_at < NOW() - INTERVAL '30 minutes';
 """
 
 SQL_INSERT_NEWS_LOG = """

@@ -11,6 +11,7 @@ from queries import (
     SQL_MARK_PROCESSING,
     SQL_MARK_READY,
     SQL_PICK_ELIGIBLE,
+    SQL_REAPER_PROCESSING_TIMEOUT,
 )
 from scraper_ebay import scrape_ebay
 from scraper_news import scrape_news
@@ -118,6 +119,23 @@ def insert_news_logs(tracker_id, news_items):
         conn.close()
 
 
+def reap_stuck_processing():
+    """Reset PROCESSING trackers yang stuck > 30 menit ke PENDING."""
+    conn = get_conn()
+    try:
+        with conn.cursor() as cur:
+            cur.execute(SQL_REAPER_PROCESSING_TIMEOUT)
+            count = cur.rowcount
+            if count:
+                logger.warning("REAPER: Reset %s stuck PROCESSING → PENDING", count)
+            conn.commit()
+    except Exception:
+        conn.rollback()
+        logger.exception("REAPER: failed to reap stuck trackers")
+    finally:
+        conn.close()
+
+
 # ---------------- main loop ----------------
 
 
@@ -125,6 +143,8 @@ def run():
     logger.info("Worker started. Logic: Amazon (2x) -> eBay (Fallback).")
 
     while True:
+        reap_stuck_processing()
+
         picked = pick_tracker()
 
         if not picked:

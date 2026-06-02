@@ -31,7 +31,7 @@ export default function ThemeToggle() {
 
   return (
     <button
-      onClick={tab={toggle}}
+      onClick={toggle}
       className="p-2 rounded-lg text-[rgb(var(--muted))] hover:text-[rgb(var(--fg))] hover:bg-[rgb(var(--border))]/40 transition-colors"
       aria-label="Toggle theme"
     >
