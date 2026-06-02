@@ -20,8 +20,6 @@ const RANGES = [
   { key: "all", label: "All", days: Infinity },
 ];
 
-// Snapshot once at module load so React Compiler doesn't complain
-// about impure calls inside component.
 let _now = Date.now();
 
 const formatCurrency = (val) =>
@@ -49,7 +47,6 @@ function CustomTooltip({ active, payload, label }) {
     year: "numeric",
   });
 
-  // Calculate delta from previous point
   const prevVal = payload[0]?.payload?.prevPrice;
   const delta = prevVal != null ? val - prevVal : null;
   const deltaPct = delta != null && prevVal > 0
@@ -58,7 +55,7 @@ function CustomTooltip({ active, payload, label }) {
 
   return (
     <div className="bg-[rgb(var(--card))] border border-[rgb(var(--border))] rounded-lg px-3.5 py-2.5 shadow-sm min-w-[140px]">
-      <p className="text-[10px] text-[rgb(var(--muted))] mb-1">{date}</p>
+      <p className="text-xs text-[rgb(var(--muted))] mb-1">{date}</p>
       <p className="text-base font-semibold tabular-nums text-[rgb(var(--fg))]">
         {formatCurrency(val)}
       </p>
@@ -119,37 +116,24 @@ export default function PriceChart({ data }) {
   const allTimeMin = Math.min(...allPrices);
   const allTimeMax = Math.max(...allPrices);
 
-  const isStatic = filteredData.length < 2;
-
-  const toggleLine = (key) => {
-    setHiddenLines((prev) => {
-      const next = new Set(prev);
-      if (next.has(key)) next.delete(key);
-      else next.add(key);
-      return next;
-    });
-  };
-
   return (
     <div className="w-full h-full flex flex-col">
-      {/* Range selector */}
+      {/* Range selector + min/max toggles */}
       <div className="flex items-center gap-1 mb-4">
         {RANGES.map((r) => {
           const isActive = range === r.key;
-          const isDisabled = r.days !== Infinity && chartData.length > 0 &&
-            r.days * 86400000 <
-              (new Date(chartData[chartData.length - 1].date).getTime() -
-                new Date(chartData[0].date).getTime())
-            ? false
-            : r.days === Infinity
-              ? false
-              : true;
+          const hasData =
+            chartData.length > 0 &&
+            new Date(chartData[chartData.length - 1].date).getTime() -
+              new Date(chartData[0].date).getTime() >=
+              r.days * 86400000;
+          const isDisabled = r.days !== Infinity && !hasData;
           return (
             <button
               key={r.key}
               onClick={() => !isDisabled && setRange(r.key)}
-              disabled={isDisabled && r.days !== Infinity}
-              className={`px-2.5 py-1 rounded text-[11px] font-medium transition-colors ${
+              disabled={isDisabled}
+              className={`px-3 py-1.5 rounded text-xs font-medium transition-colors ${
                 isActive
                   ? "bg-[rgb(var(--accent))] text-white"
                   : "text-[rgb(var(--muted))] hover:text-[rgb(var(--fg))] hover:bg-[rgb(var(--border))]/30"
@@ -160,25 +144,24 @@ export default function PriceChart({ data }) {
           );
         })}
 
-        {/* Min/max legend */}
         <div className="ml-auto flex items-center gap-3">
-          <label className="flex items-center gap-1.5 cursor-pointer">
+          <label className="flex items-center gap-1.5 cursor-pointer text-xs text-[rgb(var(--muted))]">
             <input
               type="checkbox"
               checked={!hiddenLines.has("min")}
-              onChange={() => toggleLine("min")}
-              className="w-2.5 h-2.5 accent-[rgb(var(--accent))]"
+              onChange={() => setHiddenLines((p) => { const n = new Set(p); n.has("min") ? n.delete("min") : n.add("min"); return n; })}
+              className="w-3 h-3 accent-[rgb(var(--accent))]"
             />
-            <span className="text-[10px] text-[rgb(var(--muted))]">Min</span>
+            Min
           </label>
-          <label className="flex items-center gap-1.5 cursor-pointer">
+          <label className="flex items-center gap-1.5 cursor-pointer text-xs text-[rgb(var(--muted))]">
             <input
               type="checkbox"
               checked={!hiddenLines.has("max")}
-              onChange={() => toggleLine("max")}
-              className="w-2.5 h-2.5 accent-[rgb(var(--accent))]"
+              onChange={() => setHiddenLines((p) => { const n = new Set(p); n.has("max") ? n.delete("max") : n.add("max"); return n; })}
+              className="w-3 h-3 accent-[rgb(var(--accent))]"
             />
-            <span className="text-[10px] text-[rgb(var(--muted))]">Max</span>
+            Max
           </label>
         </div>
       </div>
@@ -201,7 +184,6 @@ export default function PriceChart({ data }) {
               vertical={false}
             />
 
-            {/* All-time min/max reference lines */}
             {!hiddenLines.has("min") && filteredData.length >= 2 && (
               <ReferenceLine
                 y={allTimeMin}
@@ -212,7 +194,7 @@ export default function PriceChart({ data }) {
                   value: `Low ${formatCurrencyCompact(allTimeMin)}`,
                   position: "insideBottomLeft",
                   fill: "rgb(var(--muted))",
-                  fontSize: 10,
+                  fontSize: 11,
                 }}
               />
             )}
@@ -226,7 +208,7 @@ export default function PriceChart({ data }) {
                   value: `High ${formatCurrencyCompact(allTimeMax)}`,
                   position: "insideTopLeft",
                   fill: "rgb(var(--muted))",
-                  fontSize: 10,
+                  fontSize: 11,
                 }}
               />
             )}
@@ -240,7 +222,7 @@ export default function PriceChart({ data }) {
                 })
               }
               stroke="rgb(var(--muted-lighter))"
-              fontSize={11}
+              fontSize={12}
               tickLine={false}
               axisLine={false}
             />
@@ -255,7 +237,7 @@ export default function PriceChart({ data }) {
                 }).format(v)
               }
               stroke="rgb(var(--muted-lighter))"
-              fontSize={11}
+              fontSize={12}
               tickLine={false}
               axisLine={false}
               width={60}
@@ -279,17 +261,16 @@ export default function PriceChart({ data }) {
         </ResponsiveContainer>
       </div>
 
-      {/* Summary stats */}
       {filteredData.length >= 2 && (
-        <div className="flex items-center gap-4 mt-3 pt-3 border-t border-[rgb(var(--border))] text-[11px] text-[rgb(var(--muted))]">
+        <div className="flex items-center gap-4 mt-3 pt-3 border-t border-[rgb(var(--border))] text-xs text-[rgb(var(--muted))]">
           <span className="tabular-nums">
-            <span className="font-medium text-[rgb(var(--fg))]">{filteredData.length}</span> data points
+            <span className="font-semibold text-[rgb(var(--fg))]">{filteredData.length}</span> data points
           </span>
           <span className="tabular-nums">
-            Low: <span className="font-medium text-[rgb(var(--fg))]">{formatCurrency(minPrice)}</span>
+            Low: <span className="font-semibold text-[rgb(var(--fg))]">{formatCurrency(minPrice)}</span>
           </span>
           <span className="tabular-nums">
-            High: <span className="font-medium text-[rgb(var(--fg))]">{formatCurrency(maxPrice)}</span>
+            High: <span className="font-semibold text-[rgb(var(--fg))]">{formatCurrency(maxPrice)}</span>
           </span>
         </div>
       )}

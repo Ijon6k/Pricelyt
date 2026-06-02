@@ -68,7 +68,7 @@ export default function TrackerList({ trackers: initialTrackers }) {
         {tracked.length > 0 ? (
           <div className="border-t border-[rgb(var(--border))]">
             {/* Subtle column headers — hidden on small screens */}
-            <div className="hidden md:flex items-center gap-4 md:gap-6 px-2 py-2 text-[10px] font-medium uppercase tracking-wider text-[rgb(var(--muted-lighter))]">
+            <div className="hidden md:flex items-center gap-4 md:gap-6 px-2 py-2 text-xs font-medium uppercase tracking-wider text-[rgb(var(--muted-lighter))]">
               <span className="w-[90px] shrink-0">Status</span>
               <span className="flex-1">Product</span>
               <span className="w-[80px] shrink-0 hidden md:block">Trend</span>

@@ -1,6 +1,5 @@
 /**
  * Source badge — shows marketplace source (Amazon / eBay).
- * Uses the latest price_log's source field, or a default.
  */
 export default function SourceBadge({ source }) {
   if (!source) return null;
@@ -23,7 +22,7 @@ export default function SourceBadge({ source }) {
 
   return (
     <span
-      className={`inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium tracking-wide uppercase ${c.color}`}
+      className={`inline-flex items-center px-1.5 py-0.5 rounded text-xs font-medium tracking-wide uppercase ${c.color}`}
     >
       {c.label}
     </span>

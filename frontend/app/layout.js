@@ -1,17 +1,10 @@
 import "./globals.css";
 import Link from "next/link";
-import { DM_Serif_Display, Inter, JetBrains_Mono } from "next/font/google";
+import { Inter, JetBrains_Mono } from "next/font/google";
 import ThemeToggle from "./components/ThemeToggle";
 import Logo from "./components/Logo";
 import AuthProvider from "./components/AuthProvider";
 import HeaderAuth from "./components/HeaderAuth";
-
-const dmSerif = DM_Serif_Display({
-  subsets: ["latin"],
-  weight: ["400"],
-  variable: "--font-serif",
-  display: "swap",
-});
 
 const inter = Inter({
   subsets: ["latin"],
@@ -38,12 +31,12 @@ export default function RootLayout({ children }) {
     <html
       lang="en"
       suppressHydrationWarning
-      className={`${dmSerif.variable} ${inter.variable} ${jetbrains.variable}`}
+      className={`${inter.variable} ${jetbrains.variable}`}
     >
       <body className="min-h-screen flex flex-col">
         <AuthProvider>
           <header className="fixed top-0 inset-x-0 z-50 border-b border-[rgb(var(--border))] bg-[rgb(var(--bg))]/90 backdrop-blur-sm">
-            <div className="max-w-6xl mx-auto px-6 h-16 flex items-center justify-between">
+            <div className="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
               <Link href="/" className="no-underline">
                 <Logo />
               </Link>
@@ -57,15 +50,15 @@ export default function RootLayout({ children }) {
           <div className="pt-16 flex flex-col flex-grow">
             <div className="flex-grow">{children}</div>
 
-            <footer className="border-t border-[rgb(var(--border))] py-8 mt-16">
-              <div className="max-w-6xl mx-auto px-6 flex flex-col sm:flex-row items-center justify-between gap-3 text-[11px] text-[rgb(var(--muted))]">
+            <footer className="border-t border-[rgb(var(--border))] py-6 mt-16">
+              <div className="max-w-7xl mx-auto px-6 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-[rgb(var(--muted))]">
                 <span>&copy; {new Date().getFullYear()} Pricelyt</span>
                 <span className="flex items-center gap-2">
                   <span>Built with</span>
                   <a href="https://go.dev" target="_blank" rel="noopener noreferrer" className="text-[rgb(var(--accent))] hover:underline">Go</a>
-                  <span className="text-[rgb(var(--muted-lighter))]">·</span>
+                  <span className="ornament-dot" />
                   <a href="https://nextjs.org" target="_blank" rel="noopener noreferrer" className="text-[rgb(var(--accent))] hover:underline">Next.js</a>
-                  <span className="text-[rgb(var(--muted-lighter))]">·</span>
+                  <span className="ornament-dot" />
                   <a href="https://www.postgresql.org" target="_blank" rel="noopener noreferrer" className="text-[rgb(var(--accent))] hover:underline">PostgreSQL</a>
                 </span>
               </div>

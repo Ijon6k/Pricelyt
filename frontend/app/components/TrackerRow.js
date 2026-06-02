@@ -3,18 +3,12 @@ import Sparkline from "./Sparkline";
 import SourceBadge from "./SourceBadge";
 import {
   Eye,
-  AlertTriangle,
   Loader2,
-  Clock,
   ArrowUpRight,
   ArrowDownRight,
   Minus,
 } from "lucide-react";
 
-/**
- * Table-row variant of tracker display for the tracked list view.
- * Cleaner, information-dense, with sparkline preview.
- */
 export default function TrackerRow({ tracker, rank }) {
   const {
     id = "",
@@ -22,7 +16,6 @@ export default function TrackerRow({ tracker, rank }) {
     status = "PENDING",
     created_at,
     view_count = 0,
-    error_count = 0,
     user_name,
     price_logs = [],
   } = tracker || {};
@@ -63,7 +56,6 @@ export default function TrackerRow({ tracker, rank }) {
   };
 
   const statusCfg = getStatusConfig(status);
-
   const prices = price_logs.map((l) => l.market_price);
 
   return (
@@ -72,17 +64,16 @@ export default function TrackerRow({ tracker, rank }) {
       className="group block no-underline border-b border-[rgb(var(--border))] last:border-none"
     >
       <div className="flex items-center gap-4 md:gap-6 px-2 py-4 hover:bg-[rgb(var(--card-hover))] transition-colors rounded-sm">
-        {/* Rank (optional, numbered) */}
         {rank !== undefined && (
           <span className="text-xs text-[rgb(var(--muted-lighter))] tabular-nums w-5 shrink-0 text-right">
             {rank}
           </span>
         )}
 
-        {/* Status dot + label */}
+        {/* Status */}
         <div className="flex items-center gap-2 w-[90px] shrink-0">
           {statusCfg.spin ? (
-            <Loader2 size={10} className="animate-spin text-blue-500 shrink-0" />
+            <Loader2 size={12} className="animate-spin text-blue-500 shrink-0" />
           ) : (
             <span className={`w-2 h-2 rounded-full shrink-0 ${statusCfg.dot}`} />
           )}
@@ -96,7 +87,7 @@ export default function TrackerRow({ tracker, rank }) {
               {keyword}
             </h3>
             {user_name && (
-              <span className="text-[10px] text-[rgb(var(--accent))] font-medium shrink-0">
+              <span className="text-xs text-[rgb(var(--accent))] font-medium shrink-0">
                 @{user_name}
               </span>
             )}
@@ -115,7 +106,7 @@ export default function TrackerRow({ tracker, rank }) {
           )}
         </div>
 
-        {/* Price + change */}
+        {/* Price */}
         <div className="w-[130px] shrink-0 text-right">
           {hasPrice ? (
             <div>
@@ -128,14 +119,14 @@ export default function TrackerRow({ tracker, rank }) {
               {priceChange !== null && priceChangePct !== null && (
                 <div className="flex items-center justify-end gap-1 mt-0.5">
                   {priceChange > 0 ? (
-                    <ArrowUpRight size={10} className="text-emerald-500 shrink-0" />
+                    <ArrowUpRight size={11} className="text-emerald-500 shrink-0" />
                   ) : priceChange < 0 ? (
-                    <ArrowDownRight size={10} className="text-red-500 shrink-0" />
+                    <ArrowDownRight size={11} className="text-red-500 shrink-0" />
                   ) : (
-                    <Minus size={10} className="text-[rgb(var(--muted))] shrink-0" />
+                    <Minus size={11} className="text-[rgb(var(--muted))] shrink-0" />
                   )}
                   <span
-                    className={`text-[11px] font-medium tabular-nums ${
+                    className={`text-xs font-medium tabular-nums ${
                       priceChange > 0
                         ? "text-emerald-500"
                         : priceChange < 0
@@ -159,13 +150,13 @@ export default function TrackerRow({ tracker, rank }) {
         {/* Date + Views */}
         <div className="hidden lg:flex items-center gap-4 w-[120px] shrink-0 text-right">
           <div className="flex items-center gap-1.5 text-xs text-[rgb(var(--muted-lighter))]">
-            <Eye size={11} />
+            <Eye size={13} />
             {view_count}
           </div>
           <span className="text-xs text-[rgb(var(--muted-lighter))]">{formattedDate}</span>
         </div>
 
-        {/* Arrow indicator */}
+        {/* Arrow */}
         <div className="w-4 shrink-0">
           <ArrowUpRight
             size={14}

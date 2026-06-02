@@ -12,7 +12,7 @@ function Stat({ label, value }) {
   return (
     <div className="flex flex-col">
       <span className="editorial-label">{label}</span>
-      <span className="text-sm font-semibold tabular-nums text-[rgb(var(--fg))] mt-0.5">
+      <span className="text-sm font-semibold tabular-nums text-[rgb(var(--fg))] mt-1">
         {value}
       </span>
     </div>
@@ -83,7 +83,11 @@ export default async function TrackerDetailPage({ params }) {
   return (
     <main className="min-h-screen">
       <AutoRefresh status={tracker.status} />
-      <div className="mx-auto max-w-5xl px-6 py-10">
+
+      {/* ── DECORATIVE TOP STRIPE ── */}
+      <div className="h-1 bg-gradient-to-r from-[rgb(var(--accent))]/30 via-[rgb(var(--accent))]/10 to-transparent" />
+
+      <div className="mx-auto max-w-7xl px-6 py-8">
 
         {/* ── BACK + ACTIONS ── */}
         <div className="flex items-center justify-between mb-8">
@@ -91,49 +95,49 @@ export default async function TrackerDetailPage({ params }) {
             href="/"
             className="inline-flex items-center gap-1.5 text-xs text-[rgb(var(--muted))] hover:text-[rgb(var(--fg))] transition-colors no-underline"
           >
-            <ArrowLeft size={13} /> Back to overview
+            <ArrowLeft size={14} /> Back to overview
           </Link>
           <DeleteTrackerButton id={tracker.id} />
         </div>
 
-        {/* ── HEADER: Editorial headline section ── */}
-        <div className="mb-10 pb-8 border-b border-[rgb(var(--border))]">
+        {/* ── HEADER ── */}
+        <div className="mb-8 pb-8 border-b border-[rgb(var(--border))]">
           {/* Meta row */}
-          <div className="flex items-center gap-4 mb-4">
+          <div className="flex items-center gap-4 mb-6">
             <StatusBadge status={tracker.status} />
             {latestLog?.source && <SourceBadge source={latestLog.source} />}
             {dataPoints > 0 && (
-              <div className="flex items-center gap-1.5 text-[11px] text-[rgb(var(--muted))]">
-                <div className="flex items-center gap-1">
-                  <Calendar size={11} />
+              <div className="flex items-center gap-2 text-xs text-[rgb(var(--muted))]">
+                <div className="flex items-center gap-1.5">
+                  <Calendar size={13} />
                   <span>{formatDate(tracker.created_at)}</span>
                 </div>
-                <span className="text-[rgb(var(--muted-lighter))]">·</span>
-                <div className="flex items-center gap-1">
-                  <Eye size={11} />
+                <span className="ornament-dot" />
+                <div className="flex items-center gap-1.5">
+                  <Eye size={13} />
                   <span>{tracker.view_count} views</span>
                 </div>
-                <span className="text-[rgb(var(--muted-lighter))]">·</span>
+                <span className="ornament-dot" />
                 <span>{dataPoints} data points</span>
               </div>
             )}
           </div>
 
-          {/* Product name — editorial serif */}
-          <h1 className="text-3xl md:text-4xl font-normal tracking-tight leading-[1.1] editorial-headline mb-6 capitalize">
+          {/* Product name — bold headline */}
+          <h1 className="text-3xl md:text-4xl font-semibold tracking-tight leading-[1.1] editorial-headline mb-6 capitalize">
             {tracker.keyword}
           </h1>
 
           {/* Dominant price display */}
           {latestLog && (
-            <div className="flex items-baseline gap-3 mb-6">
-              <span className="text-5xl md:text-6xl font-semibold tabular-nums text-[rgb(var(--fg))] leading-none">
+            <div className="flex items-baseline gap-4 mb-6">
+              <span className="text-4xl md:text-5xl font-bold tabular-nums text-[rgb(var(--fg))] leading-none">
                 {formatCurrency(latestLog.market_price)}
               </span>
               <div className="flex flex-col items-start">
                 {priceChange !== null && priceChangePct !== null && (
                   <span
-                    className={`text-sm font-medium tabular-nums ${
+                    className={`text-sm font-semibold tabular-nums ${
                       priceChange > 0
                         ? "text-emerald-500"
                         : priceChange < 0
@@ -156,35 +160,39 @@ export default async function TrackerDetailPage({ params }) {
             </div>
           )}
 
-          {/* DealScore + price range as insights — not widgets */}
+          {/* DealScore */}
           <div className="flex items-center gap-4 flex-wrap">
             <DealScore priceLogs={tracker.price_logs} />
           </div>
 
           {/* ── SUMMARY STATS ── */}
           {tracker.price_logs && tracker.price_logs.length >= 2 && (
-            <div className="flex items-center gap-6 mt-6 pt-6 border-t border-[rgb(var(--border))]">
-              {(() => {
-                const prices = tracker.price_logs.map((l) => l.market_price);
-                const avg = prices.reduce((a, b) => a + b, 0) / prices.length;
-                const min = Math.min(...prices);
-                const max = Math.max(...prices);
-                // Simple volatility: stddev / mean * 100
-                const variance = prices.reduce((s, p) => s + (p - avg) ** 2, 0) / prices.length;
-                const stddev = Math.sqrt(variance);
-                const volatility = avg > 0 ? (stddev / avg) * 100 : 0;
+            <>
+              <div className="ornament-divider mt-6 mb-6">
+                <span className="text-xs font-medium text-[rgb(var(--muted))]">Price statistics</span>
+              </div>
+              <div className="flex items-center gap-8 flex-wrap">
+                {(() => {
+                  const prices = tracker.price_logs.map((l) => l.market_price);
+                  const avg = prices.reduce((a, b) => a + b, 0) / prices.length;
+                  const min = Math.min(...prices);
+                  const max = Math.max(...prices);
+                  const variance = prices.reduce((s, p) => s + (p - avg) ** 2, 0) / prices.length;
+                  const stddev = Math.sqrt(variance);
+                  const volatility = avg > 0 ? (stddev / avg) * 100 : 0;
 
-                return (
-                  <>
-                    <Stat label="Average" value={formatCurrency(avg)} />
-                    <Stat label="Min" value={formatCurrency(min)} />
-                    <Stat label="Max" value={formatCurrency(max)} />
-                    <Stat label="Volatility" value={`${volatility.toFixed(1)}%`} />
-                    <Stat label="Data points" value={String(tracker.price_logs.length)} />
-                  </>
-                );
-              })()}
-            </div>
+                  return (
+                    <>
+                      <Stat label="Average" value={formatCurrency(avg)} />
+                      <Stat label="Min" value={formatCurrency(min)} />
+                      <Stat label="Max" value={formatCurrency(max)} />
+                      <Stat label="Volatility" value={`${volatility.toFixed(1)}%`} />
+                      <Stat label="Data points" value={String(tracker.price_logs.length)} />
+                    </>
+                  );
+                })()}
+              </div>
+            </>
           )}
         </div>
 

@@ -2,10 +2,10 @@ import Link from "next/link";
 import {
   Eye,
   AlertTriangle,
-  ArrowUpRight,
-  ArrowDownRight,
   Loader2,
   Clock,
+  ArrowUpRight,
+  ArrowDownRight,
   Minus,
 } from "lucide-react";
 
@@ -25,7 +25,6 @@ export default function TrackerCard({ tracker }) {
     price_logs.length > 0 ? price_logs[price_logs.length - 1] : null;
   const hasPrice = !!latestLog;
 
-  // Price change: compare latest with second-latest.
   const prevLog = price_logs.length > 1 ? price_logs[price_logs.length - 2] : null;
   const priceChange = hasPrice && prevLog
     ? latestLog.market_price - prevLog.market_price
@@ -53,19 +52,19 @@ export default function TrackerCard({ tracker }) {
       case "PROCESSING":
         return {
           style: "bg-blue-500/10 text-blue-600 dark:text-blue-400",
-          icon: <Loader2 size={10} className="animate-spin mr-1" />,
+          icon: <Loader2 size={12} className="animate-spin mr-1" />,
           label: "Processing",
         };
       case "PENDING":
         return {
           style: "bg-amber-500/10 text-amber-600 dark:text-amber-400",
-          icon: <Clock size={10} className="mr-1" />,
+          icon: <Clock size={12} className="mr-1" />,
           label: "Pending",
         };
       case "ERROR":
         return {
           style: "bg-red-500/10 text-red-600 dark:text-red-400",
-          icon: <AlertTriangle size={10} className="mr-1" />,
+          icon: <AlertTriangle size={12} className="mr-1" />,
           label: "Error",
         };
       default:
@@ -97,13 +96,13 @@ export default function TrackerCard({ tracker }) {
           <div className="flex items-center gap-2">
             <span className="text-xs text-[rgb(var(--muted))]">{formattedDate}</span>
             {user_name && (
-              <span className="text-[10px] font-medium text-[rgb(var(--accent))]">
+              <span className="text-xs font-medium text-[rgb(var(--accent))]">
                 @{user_name}
               </span>
             )}
           </div>
           <span
-            className={`flex items-center px-2 py-0.5 rounded-full text-[10px] font-medium tracking-wide uppercase ${statusConfig.style}`}
+            className={`flex items-center px-2 py-0.5 rounded-full text-xs font-medium tracking-wide uppercase ${statusConfig.style}`}
           >
             {statusConfig.icon}
             {statusConfig.label}
@@ -163,7 +162,7 @@ export default function TrackerCard({ tracker }) {
           <div className="flex items-center justify-between text-xs text-[rgb(var(--muted))]">
             <div className="flex items-center gap-3">
               <span className="flex items-center gap-1">
-                <Eye size={12} />
+                <Eye size={13} />
                 {view_count}
               </span>
               {error_count > 0 && status !== "ERROR" && (
@@ -171,7 +170,7 @@ export default function TrackerCard({ tracker }) {
                   className="flex items-center gap-1 text-amber-600 dark:text-amber-400"
                   title="Previously errored"
                 >
-                  <AlertTriangle size={12} />
+                  <AlertTriangle size={13} />
                   {error_count}
                 </span>
               )}
