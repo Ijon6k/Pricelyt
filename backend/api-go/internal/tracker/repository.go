@@ -18,13 +18,16 @@ func NewRepository(db *sqlx.DB) *Repository {
 	return &Repository{db: db}
 }
 
+const trackerSelectCols = `
+	t.id, t.keyword, t.status, t.created_at, t.view_count,
+	t.error_count, t.last_error_code, t.last_error_message, t.last_error_at,
+	t.scrape_interval_minutes, t.last_scraped_at,
+	t.user_id, COALESCE(u.email, '') as user_name,
+	t.summary, t.summary_generated_at`
+
 func (r *Repository) FindAll() ([]Tracker, error) {
 	var trackers []Tracker
-	query := `
-		SELECT t.id, t.keyword, t.status, t.created_at, t.view_count,
-		       t.error_count, t.last_error_code, t.last_error_message, t.last_error_at,
-		       t.scrape_interval_minutes, t.last_scraped_at,
-		       t.user_id, COALESCE(u.email, '') as user_name
+	query := `SELECT` + trackerSelectCols + `
 		FROM trackers t
 		LEFT JOIN users u ON t.user_id = u.id
 		ORDER BY t.created_at DESC
@@ -38,11 +41,7 @@ func (r *Repository) FindAll() ([]Tracker, error) {
 
 func (r *Repository) FindByID(id string) (*Tracker, error) {
 	var t Tracker
-	query := `
-		SELECT t.id, t.keyword, t.status, t.created_at, t.view_count,
-		       t.error_count, t.last_error_code, t.last_error_message, t.last_error_at,
-		       t.scrape_interval_minutes, t.last_scraped_at,
-		       t.user_id, COALESCE(u.email, '') as user_name
+	query := `SELECT` + trackerSelectCols + `
 		FROM trackers t
 		LEFT JOIN users u ON t.user_id = u.id
 		WHERE t.id = $1
@@ -92,12 +91,12 @@ func (r *Repository) AddTracker(ctx context.Context, keyword string, userID *str
 		VALUES ($1, 'PENDING', $2)
 		RETURNING id, keyword, status, created_at, view_count,
 		          error_count, last_error_code, last_error_message, last_error_at,
-		          scrape_interval_minutes, last_scraped_at, user_id
+		          scrape_interval_minutes, last_scraped_at, user_id, summary, summary_generated_at
 	`
 	err := r.db.QueryRowContext(ctx, query, keyword, userID).Scan(
 		&t.ID, &t.Keyword, &t.Status, &t.CreatedAt, &t.ViewCount,
 		&t.ErrorCount, &t.LastErrorCode, &t.LastErrorMessage, &t.LastErrorAt,
-		&t.ScrapeIntervalMinutes, &t.LastScrapedAt, &t.UserID,
+		&t.ScrapeIntervalMinutes, &t.LastScrapedAt, &t.UserID, &t.Summary, &t.SummaryGeneratedAt,
 	)
 	if err != nil {
 		return nil, err
@@ -134,13 +133,15 @@ func (r *Repository) UpdateScrapeInterval(id string, minutes int) error {
 	return nil
 }
 
+func (r *Repository) UpdateSummary(ctx context.Context, trackerID, summary string) error {
+	query := `UPDATE trackers SET summary = $1, summary_generated_at = NOW() WHERE id = $2`
+	_, err := r.db.ExecContext(ctx, query, summary, trackerID)
+	return err
+}
+
 func (r *Repository) Search(ctx context.Context, keyword string) ([]Tracker, error) {
 	var trackers []Tracker
-	query := `
-		SELECT t.id, t.keyword, t.status, t.created_at, t.view_count,
-		       t.error_count, t.last_error_code, t.last_error_message, t.last_error_at,
-		       t.scrape_interval_minutes, t.last_scraped_at,
-		       t.user_id, COALESCE(u.email, '') as user_name
+	query := `SELECT` + trackerSelectCols + `
 		FROM trackers t
 		LEFT JOIN users u ON t.user_id = u.id
 		WHERE t.keyword ILIKE $1
@@ -160,7 +161,6 @@ func (r *Repository) Search(ctx context.Context, keyword string) ([]Tracker, err
 
 // --- Share methods ---
 
-// generateShareToken creates a cryptographically random 32-char hex token.
 func generateShareToken() (string, error) {
 	b := make([]byte, 16)
 	if _, err := rand.Read(b); err != nil {
@@ -240,7 +240,6 @@ func (r *Repository) GetUserStats(ctx context.Context, userID string) (*UserStat
 		return nil, err
 	}
 
-	// Get total price data points
 	dataQuery := `
 		SELECT COUNT(*)
 		FROM price_logs pl
@@ -254,11 +253,7 @@ func (r *Repository) GetUserStats(ctx context.Context, userID string) (*UserStat
 
 func (r *Repository) GetUserTrackers(ctx context.Context, userID string) ([]Tracker, error) {
 	var trackers []Tracker
-	query := `
-		SELECT t.id, t.keyword, t.status, t.created_at, t.view_count,
-		       t.error_count, t.last_error_code, t.last_error_message, t.last_error_at,
-		       t.scrape_interval_minutes, t.last_scraped_at,
-		       t.user_id, COALESCE(u.email, '') as user_name
+	query := `SELECT` + trackerSelectCols + `
 		FROM trackers t
 		LEFT JOIN users u ON t.user_id = u.id
 		WHERE t.user_id = $1

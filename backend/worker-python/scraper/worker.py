@@ -5,6 +5,7 @@ import random
 import signal
 import sys
 import time
+import urllib.request
 
 from db import get_conn
 from queries import (
@@ -159,6 +160,26 @@ def reap_stuck_processing():
         conn.close()
 
 
+def trigger_summary_generation(tracker_id):
+    """Call the Go API to generate and store a summary for this tracker.
+    
+    The summary is template-based (no LLM), so this is fast and cheap.
+    Runs after each successful scrape so the summary stays fresh.
+    """
+    api_base = os.environ.get("API_BASE_INTERNAL", "http://api:8080/api")
+    url = f"{api_base}/trackers/{tracker_id}/summary"
+    try:
+        req = urllib.request.Request(url, method="POST", headers={"Content-Type": "application/json"})
+        resp = urllib.request.urlopen(req, timeout=10)
+        if resp.status == 200:
+            logger.info("Summary generated for tracker %s", tracker_id)
+        else:
+            logger.warning("Summary generation returned %s for tracker %s", resp.status, tracker_id)
+    except Exception as e:
+        # Non-critical — don't fail the scrape just because summary failed
+        logger.warning("Summary generation failed for tracker %s: %s", tracker_id, e)
+
+
 # ---------------- main loop ----------------
 
 
@@ -262,6 +283,9 @@ def run():
 
             mark_ready(tracker_id)
             logger.info("Tracker %s marked READY.", keyword)
+
+            # Generate summary after successful scrape (non-blocking, non-critical)
+            trigger_summary_generation(tracker_id)
 
         except Exception as e:
             logger.exception("Worker Database Error processing %s", keyword)

@@ -16,6 +16,8 @@ type Tracker struct {
 	LastScrapedAt         *time.Time `db:"last_scraped_at" json:"last_scraped_at"`
 	UserID                *string    `db:"user_id" json:"user_id"`
 	UserName              string     `db:"user_name" json:"user_name"`
+	Summary               *string    `db:"summary" json:"summary"`
+	SummaryGeneratedAt    *time.Time `db:"summary_generated_at" json:"summary_generated_at"`
 }
 
 type PriceLog struct {

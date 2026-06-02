@@ -265,3 +265,28 @@ func (h *Handler) GetUserTrackers(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(trackers)
 }
+
+// --- Summary handler ---
+
+func (h *Handler) GenerateSummary(w http.ResponseWriter, r *http.Request) {
+	id := r.PathValue("id")
+	if id == "" {
+		http.Error(w, `{"error":"id is required"}`, http.StatusBadRequest)
+		return
+	}
+
+	if err := h.service.GenerateSummary(r.Context(), id); err != nil {
+		if err.Error() == "tracker not found" {
+			http.Error(w, `{"error":"tracker not found"}`, http.StatusNotFound)
+			return
+		}
+		http.Error(w, `{"error":"failed to generate summary"}`, http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(map[string]interface{}{
+		"success": true,
+		"message": "summary generated",
+	})
+}

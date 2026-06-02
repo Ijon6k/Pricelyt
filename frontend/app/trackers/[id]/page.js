@@ -7,6 +7,7 @@ import { ArrowLeft, Eye, Calendar } from "lucide-react";
 import AutoRefresh from "@/app/components/AutoRefresh";
 import DeleteTrackerButton from "@/app/components/DeleteTrackerButton";
 import ShareButton from "@/app/components/ShareButton";
+import AISummary from "@/app/components/AISummary";
 
 function Stat({ label, value }) {
   return (
@@ -215,6 +216,11 @@ export default async function TrackerDetailPage({ params }) {
             </div>
           </div>
         )}
+
+        {/* AI SUMMARY */}
+        <div className="mb-8">
+          <AISummary tracker={tracker} />
+        </div>
 
         {/* DASHBOARD */}
         <TrackerDashboard tracker={tracker} />

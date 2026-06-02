@@ -169,3 +169,17 @@ export async function fetchSharedTracker(shareToken) {
   if (!res.ok) throw new Error("Shared tracker not found");
   return res.json();
 }
+
+// --- Summary ---
+
+export async function generateSummary(trackerId, token) {
+  const res = await fetch(`${getBaseUrl()}/trackers/${trackerId}/summary`, {
+    method: "POST",
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({ error: "Failed to generate summary" }));
+    throw new Error(err.error || "Failed to generate summary");
+  }
+  return res.json();
+}

@@ -50,6 +50,9 @@ func NewRouter(db *sqlx.DB) http.Handler {
 	apiMux.HandleFunc("GET /profile/stats", mw.AuthRequired(handler.GetProfileStats))
 	apiMux.HandleFunc("GET /profile/trackers", mw.AuthRequired(handler.GetUserTrackers))
 
+	// summary (authenticated — regenerate on demand)
+	apiMux.HandleFunc("POST /trackers/{id}/summary", mw.AuthRequired(handler.GenerateSummary))
+
 	rootMux.Handle("/api/", http.StripPrefix("/api", apiMux))
 	return rootMux
 }
