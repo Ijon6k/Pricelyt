@@ -1,23 +1,23 @@
 export default function Logo() {
   return (
-    <div className="flex items-center gap-2 no-underline">
+    <div className="flex items-center gap-2.5 no-underline">
       <svg
-        width="20"
-        height="20"
-        viewBox="0 0 20 20"
+        width="22"
+        height="22"
+        viewBox="0 0 22 22"
         fill="none"
         className="shrink-0"
       >
-        <rect width="20" height="20" rx="6" fill="rgb(var(--accent))" />
+        <rect width="22" height="22" rx="5" fill="rgb(var(--accent))" />
         <path
-          d="M5 13.5L8 9L11 11.5L15 6.5"
+          d="M6 14L9 9.5L12 12L16 7"
           stroke="white"
-          strokeWidth="2"
+          strokeWidth="2.2"
           strokeLinecap="round"
           strokeLinejoin="round"
         />
       </svg>
-      <span className="text-base font-semibold tracking-tight text-[rgb(var(--fg))]">
+      <span className="text-base font-semibold tracking-tight" style={{ fontFamily: 'var(--font-serif)' }}>
         Pricelyt
       </span>
     </div>

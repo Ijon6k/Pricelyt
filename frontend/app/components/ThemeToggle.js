@@ -35,7 +35,7 @@ export default function ThemeToggle() {
       className="p-2 rounded-lg text-[rgb(var(--muted))] hover:text-[rgb(var(--fg))] hover:bg-[rgb(var(--border))]/40 transition-colors"
       aria-label="Toggle theme"
     >
-      {isDark ? <Sun size={16} /> : <Moon size={16} />}
+      {isDark ? <Sun size={15} /> : <Moon size={15} />}
     </button>
   );
 }

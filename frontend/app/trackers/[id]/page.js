@@ -2,31 +2,51 @@ import Link from "next/link";
 import { fetchTrackerDetail } from "@/app/lib/api";
 import TrackerDashboard from "@/app/components/TrackerDashboard";
 import DealScore from "@/app/components/DealScore";
-import PriceTrend from "@/app/components/PriceTrend";
-import DeleteTrackerButton from "@/app/components/DeleteTrackerButton";
+import { ArrowLeft, Eye, Calendar } from "lucide-react";
 import AutoRefresh from "@/app/components/AutoRefresh";
-import {
-  ArrowLeft,
-  AlertTriangle,
-  Eye,
-  Calendar,
-  TrendingUp,
-  TrendingDown,
-  Tag,
-} from "lucide-react";
+import DeleteTrackerButton from "@/app/components/DeleteTrackerButton";
+
+const formatCurrency = (val) =>
+  new Intl.NumberFormat("en-US", {
+    style: "currency",
+    currency: "USD",
+  }).format(val);
+
+const formatDate = (dateStr) =>
+  dateStr
+    ? new Date(dateStr).toLocaleDateString("en-US", {
+        day: "numeric",
+        month: "long",
+        year: "numeric",
+      })
+    : "-";
+
+function StatusBadge({ status }) {
+  const styles = {
+    READY: "bg-[rgb(var(--success))]",
+    PROCESSING: "bg-blue-500",
+    PENDING: "bg-[rgb(var(--amber))]",
+    ERROR: "bg-[rgb(var(--danger))]",
+  };
+  const labels = {
+    READY: "Ready",
+    PROCESSING: "Processing",
+    PENDING: "Pending",
+    ERROR: "Error",
+  };
+  return (
+    <div className="flex items-center gap-2">
+      <span className={`w-2 h-2 rounded-full ${styles[status] || "bg-[rgb(var(--muted))]"}`} />
+      <span className="text-xs font-medium uppercase tracking-wider text-[rgb(var(--muted))]">
+        {labels[status] || status}
+      </span>
+    </div>
+  );
+}
 
 export default async function TrackerDetailPage({ params }) {
   const { id } = await params;
   const tracker = await fetchTrackerDetail(id);
-
-  const formatDate = (dateStr) =>
-    dateStr
-      ? new Date(dateStr).toLocaleDateString("en-US", {
-          day: "numeric",
-          month: "long",
-          year: "numeric",
-        })
-      : "-";
 
   const hasError = !!tracker.last_error_code;
 
@@ -41,111 +61,99 @@ export default async function TrackerDetailPage({ params }) {
   const priceChange = latestLog && prevLog
     ? latestLog.market_price - prevLog.market_price
     : null;
+  const priceChangePct = prevLog && prevLog.market_price > 0
+    ? ((priceChange) / prevLog.market_price) * 100
+    : null;
 
-  const getStatusBadge = (status) => {
-    const styles = {
-      READY: "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400",
-      PROCESSING: "bg-blue-500/10 text-blue-600 dark:text-blue-400",
-      PENDING: "bg-amber-500/10 text-amber-600 dark:text-amber-400",
-      ERROR: "bg-red-500/10 text-red-600 dark:text-red-400",
-    };
-    return styles[status] || styles.PENDING;
-  };
+  const dataPoints = tracker.price_logs?.length || 0;
 
   return (
-    <main className="min-h-screen py-8 px-4 md:px-6">
+    <main className="min-h-screen">
       <AutoRefresh status={tracker.status} />
-      <div className="mx-auto max-w-6xl space-y-6">
-        {/* HEADER */}
-        <div className="flex flex-col gap-5">
-          <div className="flex items-center justify-between">
-            <Link
-              href="/"
-              className="w-fit inline-flex items-center gap-1.5 text-sm font-medium text-[rgb(var(--muted))] hover:text-[rgb(var(--fg))] transition-colors no-underline"
-            >
-              <ArrowLeft size={15} /> Back
-            </Link>
-            <DeleteTrackerButton id={tracker.id} />
+      <div className="mx-auto max-w-5xl px-6 py-10">
+
+        {/* ── BACK + ACTIONS ── */}
+        <div className="flex items-center justify-between mb-8">
+          <Link
+            href="/"
+            className="inline-flex items-center gap-1.5 text-xs text-[rgb(var(--muted))] hover:text-[rgb(var(--fg))] transition-colors no-underline"
+          >
+            <ArrowLeft size={13} /> Back to overview
+          </Link>
+          <DeleteTrackerButton id={tracker.id} />
+        </div>
+
+        {/* ── HEADER: Editorial headline section ── */}
+        <div className="mb-10 pb-8 border-b border-[rgb(var(--border))]">
+          {/* Meta row */}
+          <div className="flex items-center gap-4 mb-4">
+            <StatusBadge status={tracker.status} />
+            {dataPoints > 0 && (
+              <div className="flex items-center gap-1.5 text-[11px] text-[rgb(var(--muted))]">
+                <div className="flex items-center gap-1">
+                  <Calendar size={11} />
+                  <span>{formatDate(tracker.created_at)}</span>
+                </div>
+                <span className="text-[rgb(var(--muted-lighter))]">·</span>
+                <div className="flex items-center gap-1">
+                  <Eye size={11} />
+                  <span>{tracker.view_count} views</span>
+                </div>
+                <span className="text-[rgb(var(--muted-lighter))]">·</span>
+                <span>{dataPoints} data points</span>
+              </div>
+            )}
           </div>
 
-          <div className="flex flex-col lg:flex-row justify-between items-start lg:items-end gap-5 pb-6 border-b border-[rgb(var(--border))]">
-            <div className="space-y-2">
-              <div className="flex items-center gap-2 flex-wrap">
-                <span
-                  className={`px-2 py-0.5 rounded-full text-[10px] font-medium tracking-wide uppercase ${getStatusBadge(tracker.status)}`}
-                >
-                  {tracker.status}
-                </span>
-                {tracker.price_logs?.length > 0 && (
-                  <span className="px-2 py-0.5 rounded-full text-[10px] font-medium tracking-wide uppercase bg-zinc-500/10 text-zinc-600 dark:text-zinc-400">
-                    {tracker.price_logs.length} data points
+          {/* Product name — editorial serif */}
+          <h1 className="text-3xl md:text-4xl font-normal tracking-tight leading-[1.1] editorial-headline mb-6 capitalize">
+            {tracker.keyword}
+          </h1>
+
+          {/* Dominant price display */}
+          {latestLog && (
+            <div className="flex items-baseline gap-3 mb-6">
+              <span className="text-5xl md:text-6xl font-semibold tabular-nums text-[rgb(var(--fg))] leading-none">
+                {formatCurrency(latestLog.market_price)}
+              </span>
+              <div className="flex flex-col items-start">
+                {priceChange !== null && priceChangePct !== null && (
+                  <span
+                    className={`text-sm font-medium tabular-nums ${
+                      priceChange > 0
+                        ? "text-emerald-500"
+                        : priceChange < 0
+                          ? "text-red-500"
+                          : "text-[rgb(var(--muted))]"
+                    }`}
+                  >
+                    {priceChange > 0 ? "↑" : priceChange < 0 ? "↓" : "—"}
+                    {" "}
+                    {priceChange > 0 ? "+" : ""}
+                    {formatCurrency(priceChange)}
+                    {" "}
+                    ({priceChangePct.toFixed(1)}%)
                   </span>
                 )}
-              </div>
-              <h1 className="text-2xl md:text-3xl font-semibold text-[rgb(var(--fg))] tracking-tight capitalize">
-                {tracker.keyword}
-              </h1>
-            </div>
-
-            <div className="flex items-center gap-6 text-[rgb(var(--fg))]">
-              {/* CURRENT PRICE CARD */}
-              {latestLog && (
-                <div className="flex flex-col bg-[rgb(var(--card))] border border-[rgb(var(--border))] rounded-lg px-4 py-2.5 min-w-[160px]">
-                  <span className="text-[11px] font-medium text-[rgb(var(--muted))] uppercase tracking-wider mb-1">
-                    Current price
-                  </span>
-                  <div className="flex items-center gap-2">
-                    <span className="text-lg font-semibold tabular-nums">
-                      {new Intl.NumberFormat("en-US", {
-                        style: "currency",
-                        currency: "USD",
-                      }).format(latestLog.market_price)}
-                    </span>
-                    {priceChange !== null && priceChange !== 0 && (
-                      priceChange > 0 ? (
-                        <TrendingUp size={16} className="text-emerald-500" />
-                      ) : (
-                        <TrendingDown size={16} className="text-red-500" />
-                      )
-                    )}
-                  </div>
-                </div>
-              )}
-
-              <div className="flex flex-col">
-                <span className="text-[11px] font-medium text-[rgb(var(--muted))] uppercase tracking-wider mb-1">
-                  Views
+                <span className="text-xs text-[rgb(var(--muted-lighter))]">
+                  Latest price
                 </span>
-                <div className="flex items-center gap-1.5 text-base font-semibold">
-                  <Eye size={15} className="text-[rgb(var(--muted))]" />
-                  {tracker.view_count}
-                </div>
-              </div>
-              <div className="flex flex-col">
-                <span className="text-[11px] font-medium text-[rgb(var(--muted))] uppercase tracking-wider mb-1">
-                  Created
-                </span>
-                <div className="flex items-center gap-1.5 text-base font-medium">
-                  <Calendar size={15} className="text-[rgb(var(--muted))]" />
-                  {formatDate(tracker.created_at)}
-                </div>
               </div>
             </div>
+          )}
 
-            {/* DEAL SCORE + TREND */}
-            <div className="flex items-center gap-3 mt-2">
-              <DealScore priceLogs={tracker.price_logs} />
-              <PriceTrend priceLogs={tracker.price_logs} />
-            </div>
+          {/* DealScore + price range as insights — not widgets */}
+          <div className="flex items-center gap-4 flex-wrap">
+            <DealScore priceLogs={tracker.price_logs} />
           </div>
         </div>
 
-        {/* ERROR BANNER */}
+        {/* ── ERROR BANNER ── */}
         {hasError && (
-          <div className="p-4 rounded-xl bg-red-500/5 border border-red-500/20 flex gap-3 items-start">
-            <AlertTriangle size={18} className="text-red-500 mt-0.5 shrink-0" />
+          <div className="mb-8 p-4 rounded-lg border border-[rgb(var(--danger))]/20 bg-[rgb(var(--danger))]/5 flex gap-3 items-start">
+            <div className="w-2 h-2 rounded-full bg-[rgb(var(--danger))] mt-1.5 shrink-0" />
             <div>
-              <h3 className="text-sm font-medium text-red-600 dark:text-red-400">
+              <h3 className="text-sm font-medium text-[rgb(var(--danger))]">
                 Scraping error
               </h3>
               <p className="text-xs text-[rgb(var(--muted))] mt-0.5">
@@ -155,7 +163,7 @@ export default async function TrackerDetailPage({ params }) {
           </div>
         )}
 
-        {/* DASHBOARD */}
+        {/* ── CONTENT: Chart + Dashboard ── */}
         <TrackerDashboard tracker={tracker} />
       </div>
     </main>

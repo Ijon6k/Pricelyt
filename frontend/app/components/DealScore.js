@@ -1,7 +1,11 @@
 "use client";
 
-import { ThumbsUp, ThumbsDown, Minus } from "lucide-react";
+import { TrendingDown, TrendingUp, Minus } from "lucide-react";
 
+/**
+ * Editorial insight: evaluates the current price vs historical average.
+ * Presented as a metric label, not a card widget.
+ */
 export default function DealScore({ priceLogs }) {
   if (!priceLogs || priceLogs.length === 0) return null;
 
@@ -9,26 +13,22 @@ export default function DealScore({ priceLogs }) {
   const prices = priceLogs.map((p) => p.market_price);
   const avg = prices.reduce((a, b) => a + b, 0) / prices.length;
 
-  // Percent deviation from average
   const deviation = ((latest - avg) / avg) * 100;
 
-  let Icon, label, color, bgColor;
+  let Icon, label, color;
 
   if (deviation < -5) {
-    Icon = ThumbsUp;
+    Icon = TrendingDown;
     label = `Great deal — ${Math.abs(deviation).toFixed(0)}% below average`;
-    color = "text-emerald-600 dark:text-emerald-400";
-    bgColor = "bg-emerald-500/10 border-emerald-500/20";
+    color = "text-[rgb(var(--success))]";
   } else if (deviation > 5) {
-    Icon = ThumbsDown;
+    Icon = TrendingUp;
     label = `Above typical — ${deviation.toFixed(0)}% over average`;
-    color = "text-red-600 dark:text-red-400";
-    bgColor = "bg-red-500/10 border-red-500/20";
+    color = "text-[rgb(var(--danger))]";
   } else {
     Icon = Minus;
     label = "Near the long-term average";
     color = "text-[rgb(var(--muted))]";
-    bgColor = "bg-[rgb(var(--card))] border-[rgb(var(--border))]";
   }
 
   const formatCurrency = (val) =>
@@ -38,14 +38,12 @@ export default function DealScore({ priceLogs }) {
     }).format(val);
 
   return (
-    <div className={`flex items-center gap-2 px-3 py-2 rounded-lg border text-xs ${bgColor} ${color}`}>
+    <div className={`flex items-center gap-1.5 text-xs ${color}`}>
       <Icon size={13} />
-      <div>
-        <span className="font-medium">{label}</span>
-        <span className="text-[rgb(var(--muted))] ml-1">
-          (avg {formatCurrency(avg)})
-        </span>
-      </div>
+      <span>{label}</span>
+      <span className="text-[rgb(var(--muted-lighter))]">
+        · avg {formatCurrency(avg)}
+      </span>
     </div>
   );
 }

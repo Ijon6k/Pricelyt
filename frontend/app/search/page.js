@@ -4,7 +4,7 @@ import { useSearchParams, useRouter } from "next/navigation";
 import { useEffect, useState, Suspense } from "react";
 import { searchTrackers, addTracker } from "@/app/lib/api";
 import SearchBar from "@/app/components/SearchBar";
-import TrackerCard from "@/app/components/TrackerCard";
+import TrackerRow from "@/app/components/TrackerRow";
 import { SearchX, Loader2, Plus } from "lucide-react";
 
 function SearchContent() {
@@ -60,7 +60,7 @@ function SearchContent() {
           {/* TITLE */}
           <div className="mb-8">
             {query ? (
-              <h1 className="text-xl font-semibold text-[rgb(var(--fg))]">
+              <h1 className="text-2xl font-normal editorial-headline tracking-tight">
                 Results for{" "}
                 <span className="text-[rgb(var(--accent))]">
                   &ldquo;{query}&rdquo;
@@ -68,7 +68,7 @@ function SearchContent() {
               </h1>
             ) : (
               <div className="text-center py-10">
-                <h2 className="text-lg text-[rgb(var(--muted))]">
+                <h2 className="text-base text-[rgb(var(--muted))]">
                   What are you looking for?
                 </h2>
               </div>
@@ -77,9 +77,9 @@ function SearchContent() {
 
           {/* LOADING */}
           {loading && (
-            <div className="flex flex-col items-center justify-center py-20 gap-3">
-              <Loader2 size={28} className="animate-spin text-[rgb(var(--accent))]" />
-              <p className="text-sm text-[rgb(var(--muted))]">Searching…</p>
+            <div className="flex flex-col items-center justify-center py-16 gap-3">
+              <Loader2 size={24} className="animate-spin text-[rgb(var(--accent))]" />
+              <p className="text-sm text-[rgb(var(--muted))]">Searching&hellip;</p>
             </div>
           )}
 
@@ -87,22 +87,20 @@ function SearchContent() {
           {!loading && query && (
             <div className="space-y-8">
               {results.length > 0 && (
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+                <div className="border-t border-[rgb(var(--border))]">
                   {results.map((item) => (
-                    <div key={item.id} className="h-full">
-                      <TrackerCard tracker={item} />
-                    </div>
+                    <TrackerRow key={item.id} tracker={item} />
                   ))}
                 </div>
               )}
 
               {/* CTA */}
-              <div className="border border-dashed border-[rgb(var(--border))] rounded-xl p-8 text-center">
-                <div className="mx-auto w-12 h-12 bg-[rgb(var(--bg))] rounded-full flex items-center justify-center mb-3 text-[rgb(var(--muted))]">
+              <div className="border border-dashed border-[rgb(var(--border))] rounded-lg p-8 text-center">
+                <div className="mx-auto w-10 h-10 bg-[rgb(var(--accent-soft))] rounded-full flex items-center justify-center mb-3">
                   {results.length === 0 ? (
-                    <SearchX size={24} />
+                    <SearchX size={18} className="text-[rgb(var(--accent))]" />
                   ) : (
-                    <Plus size={24} />
+                    <Plus size={18} className="text-[rgb(var(--accent))]" />
                   )}
                 </div>
 
@@ -124,7 +122,7 @@ function SearchContent() {
                   {isAdding ? (
                     <>
                       <Loader2 size={16} className="animate-spin" />
-                      Creating…
+                      Creating&hellip;
                     </>
                   ) : (
                     <>
