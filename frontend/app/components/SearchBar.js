@@ -3,11 +3,13 @@
 import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { searchTrackers, addTracker } from "@/app/lib/api";
+import { useAuth } from "@/app/lib/AuthContext";
 import { Search, Loader2, ArrowRight, Plus } from "lucide-react";
 
 export default function SearchBar({ initialValue = "" }) {
   const router = useRouter();
   const wrapperRef = useRef(null);
+  const { token } = useAuth();
 
   const [query, setQuery] = useState(initialValue);
   const [loading, setLoading] = useState(false);
@@ -62,10 +64,10 @@ export default function SearchBar({ initialValue = "" }) {
   const handleCreateNew = async () => {
     setLoading(true);
     try {
-      const item = await addTracker(query);
+      const item = await addTracker(query, token);
       router.push(`/trackers/${item.id}`);
     } catch (e) {
-      alert("Failed to create tracker.");
+      alert(e.message || "Failed to create tracker. Log in first.");
     } finally {
       setLoading(false);
     }

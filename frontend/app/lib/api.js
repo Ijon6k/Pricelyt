@@ -40,12 +40,45 @@ export async function searchTrackers(keyword) {
   return res.json();
 }
 
-export async function addTracker(keyword) {
+export async function addTracker(keyword, token) {
+  const headers = { "Content-Type": "application/json" };
+  if (token) {
+    headers["Authorization"] = `Bearer ${token}`;
+  }
   const res = await fetch(`${getBaseUrl()}/trackers`, {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
+    headers,
     body: JSON.stringify({ keyword }),
   });
-  if (!res.ok) throw new Error("Failed to add tracker");
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({ error: "Failed to add tracker" }));
+    throw new Error(err.error || "Failed to add tracker");
+  }
+  return res.json();
+}
+
+export async function registerUser(email, password) {
+  const res = await fetch(`${getBaseUrl()}/auth/register`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ email, password }),
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({ error: "Registration failed" }));
+    throw new Error(err.error || "Registration failed");
+  }
+  return res.json();
+}
+
+export async function loginUser(email, password) {
+  const res = await fetch(`${getBaseUrl()}/auth/login`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ email, password }),
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({ error: "Login failed" }));
+    throw new Error(err.error || "Login failed");
+  }
   return res.json();
 }

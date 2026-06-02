@@ -7,6 +7,7 @@ import (
 	"strings"
 
 	"api/internal/db"
+	"api/internal/auth"
 	apihttp "api/internal/http"
 
 	"github.com/joho/godotenv"
@@ -39,6 +40,14 @@ func main() {
 	log.Println("  database:", dbname)
 
 	router := apihttp.NewRouter(conn)
+
+	// Init JWT secret
+	jwtSecret := os.Getenv("JWT_SECRET")
+	if jwtSecret == "" {
+		jwtSecret = "pricelyt-jwt-secret-change-in-production"
+	}
+	auth.Init(jwtSecret)
+
 
 	// Allowed CORS origins come from env (comma-separated). Behind the
 	// nginx reverse proxy the frontend and API share an origin, so CORS
