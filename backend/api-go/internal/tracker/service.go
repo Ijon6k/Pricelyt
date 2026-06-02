@@ -55,8 +55,12 @@ func (s *Service) GetTrackerDetailByID(id string) (*TrackerDetail, error) {
 }
 
 func (s *Service) AddTracker(ctx context.Context, keyword string) (*Tracker, error) {
+	keyword = strings.TrimSpace(keyword)
 	if keyword == "" {
 		return nil, errors.New("keyword cannot be empty")
+	}
+	if len(keyword) > 200 {
+		return nil, errors.New("keyword must not exceed 200 characters")
 	}
 
 	result, err := s.repo.AddTracker(ctx, keyword)
@@ -68,6 +72,16 @@ func (s *Service) AddTracker(ctx context.Context, keyword string) (*Tracker, err
 
 func (s *Service) DeleteTracker(ctx context.Context, id string) error {
 	return s.repo.Delete(ctx, id)
+}
+
+func (s *Service) UpdateScrapeInterval(ctx context.Context, id string, minutes int) error {
+	if minutes < 5 {
+		return errors.New("scrape interval must be at least 5 minutes")
+	}
+	if minutes > 10080 { // 7 days
+		return errors.New("scrape interval must not exceed 7 days")
+	}
+	return s.repo.UpdateScrapeInterval(id, minutes)
 }
 
 func (s *Service) SearchTracker(ctx context.Context, query string) (*SearchResponse, error) {

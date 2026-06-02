@@ -1,6 +1,9 @@
 import asyncio
 import logging
+import os
 import random
+import signal
+import sys
 import time
 
 from db import get_conn
@@ -84,6 +87,7 @@ def insert_price_logs(tracker_id, price_result):
                     price_result["max_price"],
                     price_result["median_price"],
                     price_result["count"],
+                    price_result.get("source", "unknown"),
                 ),
             )
         conn.commit()
@@ -139,10 +143,23 @@ def reap_stuck_processing():
 # ---------------- main loop ----------------
 
 
+_shutdown_requested = False
+
+
+def _handle_shutdown(signum, frame):
+    global _shutdown_requested
+    logger.info("Received signal %s, shutting down gracefully...", signum)
+    _shutdown_requested = True
+
+
 def run():
+    # Register signal handlers for graceful shutdown
+    signal.signal(signal.SIGTERM, _handle_shutdown)
+    signal.signal(signal.SIGINT, _handle_shutdown)
+
     logger.info("Worker started. Logic: Amazon (2x) -> eBay (Fallback).")
 
-    while True:
+    while not _shutdown_requested:
         reap_stuck_processing()
 
         picked = pick_tracker()
@@ -235,5 +252,8 @@ def run():
 if __name__ == "__main__":
     try:
         run()
-    except KeyboardInterrupt:
-        pass
+    except Exception:
+        logger.exception("Worker crashed")
+        sys.exit(1)
+    finally:
+        logger.info("Worker shut down.")

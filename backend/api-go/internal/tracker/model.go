@@ -3,15 +3,17 @@ package tracker
 import "time"
 
 type Tracker struct {
-	ID               string     `db:"id" json:"id"`
-	Keyword          string     `db:"keyword" json:"keyword"`
-	Status           string     `db:"status" json:"status"`
-	CreatedAt        time.Time  `db:"created_at" json:"created_at"`
-	ViewCount        int        `db:"view_count" json:"view_count"`
-	ErrorCount       int        `db:"error_count" json:"error_count"`
-	LastErrorCode    *string    `db:"last_error_code" json:"last_error_code"`
-	LastErrorMessage *string    `db:"last_error_message" json:"last_error_message"`
-	LastErrorAt      *time.Time `db:"last_error_at" json:"last_error_at"`
+	ID                      string     `db:"id" json:"id"`
+	Keyword                 string     `db:"keyword" json:"keyword"`
+	Status                  string     `db:"status" json:"status"`
+	CreatedAt               time.Time  `db:"created_at" json:"created_at"`
+	ViewCount               int        `db:"view_count" json:"view_count"`
+	ErrorCount              int        `db:"error_count" json:"error_count"`
+	LastErrorCode           *string    `db:"last_error_code" json:"last_error_code"`
+	LastErrorMessage        *string    `db:"last_error_message" json:"last_error_message"`
+	LastErrorAt             *time.Time `db:"last_error_at" json:"last_error_at"`
+	ScrapeIntervalMinutes   int        `db:"scrape_interval_minutes" json:"scrape_interval_minutes"`
+	LastScrapedAt           *time.Time `db:"last_scraped_at" json:"last_scraped_at"`
 }
 
 type PriceLog struct {
@@ -21,6 +23,7 @@ type PriceLog struct {
 	MaxPrice    int       `db:"max_price" json:"max_price"`
 	MedianPrice *int      `db:"median_price" json:"median_price"`
 	SampleCount int       `db:"sample_count" json:"sample_count"`
+	Source      string    `db:"source" json:"source"`
 	ScrapedAt   time.Time `db:"scraped_at" json:"scraped_at"`
 }
 

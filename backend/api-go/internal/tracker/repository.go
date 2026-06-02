@@ -19,7 +19,9 @@ func (r *Repository) FindAll() ([]Tracker, error) {
 	var trackers []Tracker
 
 	query := `
-        SELECT id, keyword, status, created_at, view_count
+        SELECT id, keyword, status, created_at, view_count,
+               error_count, last_error_code, last_error_message, last_error_at,
+               scrape_interval_minutes, last_scraped_at
         FROM trackers
         ORDER BY created_at DESC
     `
@@ -38,7 +40,8 @@ func (r *Repository) FindByID(id string) (*Tracker, error) {
 	query := `
         SELECT
             id, keyword, status, created_at, view_count,
-            error_count, last_error_code, last_error_message, last_error_at
+            error_count, last_error_code, last_error_message, last_error_at,
+            scrape_interval_minutes, last_scraped_at
         FROM trackers
         WHERE id = $1
         LIMIT 1
@@ -64,7 +67,7 @@ func (r *Repository) IncrementViewCount(id string) error {
 func (r *Repository) FindPriceLogs(trackerID string) ([]PriceLog, error) {
 	var logs []PriceLog
 	query := `
-		SELECT id, market_price, min_price, max_price, median_price, sample_count, scraped_at
+		SELECT id, market_price, min_price, max_price, median_price, sample_count, source, scraped_at
 		FROM price_logs
 		WHERE tracker_id = $1
 		ORDER BY scraped_at ASC
@@ -91,9 +94,15 @@ func (r *Repository) AddTracker(ctx context.Context, keyword string) (*Tracker, 
 	query := `
 		INSERT INTO trackers (keyword, status)
 		VALUES ($1, 'PENDING')
-		RETURNING id, keyword, status,created_at, view_count	`
+		RETURNING id, keyword, status, created_at, view_count,
+		          error_count, last_error_code, last_error_message, last_error_at,
+		          scrape_interval_minutes, last_scraped_at`
 
-	err := r.db.QueryRowContext(ctx, query, keyword).Scan(&t.ID, &t.Keyword, &t.Status, &t.CreatedAt, &t.ViewCount)
+	err := r.db.QueryRowContext(ctx, query, keyword).Scan(
+		&t.ID, &t.Keyword, &t.Status, &t.CreatedAt, &t.ViewCount,
+		&t.ErrorCount, &t.LastErrorCode, &t.LastErrorMessage, &t.LastErrorAt,
+		&t.ScrapeIntervalMinutes, &t.LastScrapedAt,
+	)
 
 	if err != nil {
 		return nil, err
@@ -120,6 +129,19 @@ func (r *Repository) Delete(ctx context.Context, id string) error {
 
 	return nil
 }
+func (r *Repository) UpdateScrapeInterval(id string, minutes int) error {
+	query := `UPDATE trackers SET scrape_interval_minutes = $1 WHERE id = $2`
+	result, err := r.db.Exec(query, minutes, id)
+	if err != nil {
+		return err
+	}
+	rows, _ := result.RowsAffected()
+	if rows == 0 {
+		return errors.New("tracker not found")
+	}
+	return nil
+}
+
 func (r *Repository) Search(ctx context.Context, keyword string) ([]Tracker, error) {
 	var trackers []Tracker
 
@@ -127,7 +149,9 @@ func (r *Repository) Search(ctx context.Context, keyword string) ([]Tracker, err
 	// 1. 'lenght' diganti jadi 'length'
 	// 2. Koma sebelum DESC dihapus
 	query := `
-        SELECT id, keyword, status, created_at, view_count
+        SELECT id, keyword, status, created_at, view_count,
+               error_count, last_error_code, last_error_message, last_error_at,
+               scrape_interval_minutes, last_scraped_at
         FROM trackers
         WHERE keyword ILIKE $1
         ORDER BY length(keyword) ASC, created_at DESC

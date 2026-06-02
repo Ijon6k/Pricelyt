@@ -68,6 +68,10 @@ func (h *Handler) AddTracker(w http.ResponseWriter, r *http.Request) {
 
 	result, err := h.service.AddTracker(r.Context(), req.Keyword)
 	if err != nil {
+		if err.Error() == "keyword cannot be empty" || err.Error() == "keyword must not exceed 200 characters" {
+			http.Error(w, err.Error(), http.StatusBadRequest)
+			return
+		}
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
@@ -95,4 +99,38 @@ func (h *Handler) DeleteTracker(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.WriteHeader(http.StatusNoContent)
+}
+
+type UpdateIntervalRequest struct {
+	ScrapeIntervalMinutes int `json:"scrape_interval_minutes"`
+}
+
+func (h *Handler) UpdateScrapeInterval(w http.ResponseWriter, r *http.Request) {
+	id := r.PathValue("id")
+	if id == "" {
+		http.Error(w, "ID is required", http.StatusBadRequest)
+		return
+	}
+
+	var req UpdateIntervalRequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		http.Error(w, "Invalid request body", http.StatusBadRequest)
+		return
+	}
+
+	if err := h.service.UpdateScrapeInterval(r.Context(), id, req.ScrapeIntervalMinutes); err != nil {
+		if err.Error() == "tracker not found" {
+			http.Error(w, "Tracker not found", http.StatusNotFound)
+			return
+		}
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(map[string]interface{}{
+		"success": true,
+		"message": "scrape interval updated",
+	})
 }

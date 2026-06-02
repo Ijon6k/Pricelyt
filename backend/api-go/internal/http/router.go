@@ -25,6 +25,7 @@ func NewRouter(db *sqlx.DB) http.Handler {
 	apiMux.HandleFunc("GET /trackers", handler.GetTrackers)
 	apiMux.HandleFunc("POST /trackers", handler.AddTracker)
 	apiMux.HandleFunc("GET /trackers/{id}", handler.GetTrackerByID)
+	apiMux.HandleFunc("PATCH /trackers/{id}", handler.UpdateScrapeInterval)
 	apiMux.HandleFunc("DELETE /trackers/{id}", mw.AdminOnly(handler.DeleteTracker))
 
 	rootMux.Handle("/api/", http.StripPrefix("/api", apiMux))

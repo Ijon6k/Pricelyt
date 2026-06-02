@@ -57,9 +57,10 @@ INSERT INTO price_logs (
     max_price,
     median_price,
     sample_count,
+    source,
     scraped_at
 )
-VALUES (%s, %s, %s, %s, %s, %s, NOW());
+VALUES (%s, %s, %s, %s, %s, %s, %s, NOW());
 """
 
 SQL_REAPER_PROCESSING_TIMEOUT = """

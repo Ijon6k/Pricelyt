@@ -1,17 +1,16 @@
 import asyncio
 import logging
-import os
 import random
 import re
 import statistics
 from typing import Dict, List, Optional
 
 from browser_factory import create_browser
+from constants import IDR_TO_USD_RATE
 
 logger = logging.getLogger("scraper.ebay")
 
 PAGES_TO_SCRAPE = 2
-IDR_TO_USD_RATE = int(os.getenv("IDR_TO_USD_RATE", "16200"))  # Normalisasi ke USD untuk database
 
 NEGATIVE_KEYWORDS = [
     "broken",
@@ -126,6 +125,7 @@ async def scrape_ebay(keyword: str) -> Optional[Dict]:
             "market_price": int(statistics.mean(all_prices)),
             "min_price": all_prices[0],
             "max_price": all_prices[-1],
+            "source": "ebay",
         }
 
     except Exception:

@@ -55,6 +55,11 @@ services:
       CORS_ORIGINS: ${CORS_ORIGINS:-http://localhost:4444}
     expose:
       - "8080"
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:8080/api/health"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
     restart: unless-stopped
     logging:
       driver: journald
@@ -93,6 +98,11 @@ services:
       NODE_ENV: production
     expose:
       - "3000"
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:3000"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
     restart: unless-stopped
     logging:
       driver: journald

@@ -10,12 +10,10 @@ from browser_factory import create_browser
 
 logger = logging.getLogger("scraper.price")
 
+from constants import IDR_TO_USD_RATE
+
 PAGES_TO_SCRAPE = 3
 MAX_DETAIL_PAGE_VISITS = 5
-# Rate used to normalize a detected non-USD (IDR) price back to USD. Override
-# via env when scraping a different-currency marketplace. Set to 1 to disable.
-IDR_TO_USD_RATE = int(os.getenv("IDR_TO_USD_RATE", "16200"))
-
 
 def _normalize_text(text: str) -> str:
     return re.sub(r"[^a-z0-9]", "", text.lower())
@@ -255,6 +253,7 @@ async def scrape_price(keyword: str) -> Optional[Dict]:
             "market_price": market_price,
             "min_price": valid_prices[0],
             "max_price": valid_prices[-1],
+            "source": "amazon",
         }
 
         logger.info(
