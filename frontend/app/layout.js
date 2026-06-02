@@ -36,7 +36,7 @@ export default function RootLayout({ children }) {
       <body className="min-h-screen flex flex-col">
         <AuthProvider>
           <header className="fixed top-0 inset-x-0 z-50 border-b border-[rgb(var(--border))] bg-[rgb(var(--bg))]/90 backdrop-blur-sm">
-            <div className="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
+            <div className="max-w-screen-2xl mx-auto px-6 xl:px-10 h-16 flex items-center justify-between">
               <Link href="/" className="no-underline">
                 <Logo />
               </Link>
@@ -51,7 +51,7 @@ export default function RootLayout({ children }) {
             <div className="flex-grow">{children}</div>
 
             <footer className="border-t border-[rgb(var(--border))] py-6 mt-16">
-              <div className="max-w-7xl mx-auto px-6 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-[rgb(var(--muted))]">
+              <div className="max-w-screen-2xl mx-auto px-6 xl:px-10 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-[rgb(var(--muted))]">
                 <span>&copy; {new Date().getFullYear()} Pricelyt</span>
                 <span className="flex items-center gap-2">
                   <span>Built with</span>

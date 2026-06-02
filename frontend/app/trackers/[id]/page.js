@@ -7,7 +7,6 @@ import { ArrowLeft, Eye, Calendar } from "lucide-react";
 import AutoRefresh from "@/app/components/AutoRefresh";
 import DeleteTrackerButton from "@/app/components/DeleteTrackerButton";
 
-// Inline stat component for the summary block
 function Stat({ label, value }) {
   return (
     <div className="flex flex-col">
@@ -48,9 +47,9 @@ function StatusBadge({ status }) {
     ERROR: "Error",
   };
   return (
-    <div className="flex items-center gap-2">
-      <span className={`w-2 h-2 rounded-full ${styles[status] || "bg-[rgb(var(--muted))]"}`} />
-      <span className="text-xs font-medium uppercase tracking-wider text-[rgb(var(--muted))]">
+    <div className="flex items-center gap-2.5">
+      <span className={`w-2.5 h-2.5 rounded-full ${styles[status] || "bg-[rgb(var(--muted))]"}`} />
+      <span className="text-sm font-medium uppercase tracking-wider text-[rgb(var(--muted))]">
         {labels[status] || status}
       </span>
     </div>
@@ -84,37 +83,37 @@ export default async function TrackerDetailPage({ params }) {
     <main className="min-h-screen">
       <AutoRefresh status={tracker.status} />
 
-      {/* ── DECORATIVE TOP STRIPE ── */}
+      {/* Decorative top stripe */}
       <div className="h-1 bg-gradient-to-r from-[rgb(var(--accent))]/30 via-[rgb(var(--accent))]/10 to-transparent" />
 
-      <div className="mx-auto max-w-7xl px-6 py-8">
+      <div className="max-w-screen-2xl mx-auto px-6 xl:px-10 py-8">
 
-        {/* ── BACK + ACTIONS ── */}
-        <div className="flex items-center justify-between mb-8">
+        {/* BACK + ACTIONS */}
+        <div className="flex items-center justify-between mb-10">
           <Link
             href="/"
-            className="inline-flex items-center gap-1.5 text-xs text-[rgb(var(--muted))] hover:text-[rgb(var(--fg))] transition-colors no-underline"
+            className="inline-flex items-center gap-2 text-sm text-[rgb(var(--muted))] hover:text-[rgb(var(--fg))] transition-colors no-underline"
           >
-            <ArrowLeft size={14} /> Back to overview
+            <ArrowLeft size={16} /> Back to overview
           </Link>
           <DeleteTrackerButton id={tracker.id} />
         </div>
 
-        {/* ── HEADER ── */}
-        <div className="mb-8 pb-8 border-b border-[rgb(var(--border))]">
+        {/* HEADER — now 2-column on desktop */}
+        <div className="mb-10 pb-10 border-b border-[rgb(var(--border))]">
           {/* Meta row */}
-          <div className="flex items-center gap-4 mb-6">
+          <div className="flex items-center gap-5 mb-6">
             <StatusBadge status={tracker.status} />
             {latestLog?.source && <SourceBadge source={latestLog.source} />}
             {dataPoints > 0 && (
-              <div className="flex items-center gap-2 text-xs text-[rgb(var(--muted))]">
+              <div className="flex items-center gap-2 text-sm text-[rgb(var(--muted))]">
                 <div className="flex items-center gap-1.5">
-                  <Calendar size={13} />
+                  <Calendar size={14} />
                   <span>{formatDate(tracker.created_at)}</span>
                 </div>
                 <span className="ornament-dot" />
                 <div className="flex items-center gap-1.5">
-                  <Eye size={13} />
+                  <Eye size={14} />
                   <span>{tracker.view_count} views</span>
                 </div>
                 <span className="ornament-dot" />
@@ -123,55 +122,57 @@ export default async function TrackerDetailPage({ params }) {
             )}
           </div>
 
-          {/* Product name — bold headline */}
-          <h1 className="text-3xl md:text-4xl font-semibold tracking-tight leading-[1.1] editorial-headline mb-6 capitalize">
-            {tracker.keyword}
-          </h1>
-
-          {/* Dominant price display */}
-          {latestLog && (
-            <div className="flex items-baseline gap-4 mb-6">
-              <span className="text-4xl md:text-5xl font-bold tabular-nums text-[rgb(var(--fg))] leading-none">
-                {formatCurrency(latestLog.market_price)}
-              </span>
-              <div className="flex flex-col items-start">
-                {priceChange !== null && priceChangePct !== null && (
-                  <span
-                    className={`text-sm font-semibold tabular-nums ${
-                      priceChange > 0
-                        ? "text-emerald-500"
-                        : priceChange < 0
-                          ? "text-red-500"
-                          : "text-[rgb(var(--muted))]"
-                    }`}
-                  >
-                    {priceChange > 0 ? "↑" : priceChange < 0 ? "↓" : "—"}
-                    {" "}
-                    {priceChange > 0 ? "+" : ""}
-                    {formatCurrency(priceChange)}
-                    {" "}
-                    ({priceChangePct.toFixed(1)}%)
-                  </span>
-                )}
-                <span className="text-xs text-[rgb(var(--muted-lighter))]">
-                  Latest price
-                </span>
-              </div>
+          {/* Two-col layout: product name + price side by side */}
+          <div className="grid grid-cols-1 lg:grid-cols-5 gap-8 items-end">
+            {/* Left: product name + meta */}
+            <div className="lg:col-span-3">
+              <h1 className="text-3xl md:text-4xl lg:text-5xl font-semibold tracking-tight leading-[1.1] mb-3 capitalize">
+                {tracker.keyword}
+              </h1>
+              <DealScore priceLogs={tracker.price_logs} />
             </div>
-          )}
 
-          {/* DealScore */}
-          <div className="flex items-center gap-4 flex-wrap">
-            <DealScore priceLogs={tracker.price_logs} />
+            {/* Right: dominant price + change */}
+            <div className="lg:col-span-2 text-left lg:text-right">
+              {latestLog && (
+                <div className="flex lg:flex-col items-baseline lg:items-end gap-4 lg:gap-1">
+                  <span className="text-5xl md:text-6xl font-bold tabular-nums text-[rgb(var(--fg))] leading-none">
+                    {formatCurrency(latestLog.market_price)}
+                  </span>
+                  <div className="flex lg:flex-col items-baseline lg:items-end gap-2 lg:gap-0.5">
+                    {priceChange !== null && priceChangePct !== null && (
+                      <span
+                        className={`text-base font-semibold tabular-nums ${
+                          priceChange > 0
+                            ? "text-emerald-500"
+                            : priceChange < 0
+                              ? "text-red-500"
+                              : "text-[rgb(var(--muted))]"
+                        }`}
+                      >
+                        {priceChange > 0 ? "↑" : priceChange < 0 ? "↓" : "—"}
+                        {" "}
+                        {priceChange > 0 ? "+" : ""}
+                        {formatCurrency(priceChange)}
+                        {" "}({priceChangePct.toFixed(1)}%)
+                      </span>
+                    )}
+                    <span className="text-xs text-[rgb(var(--muted-lighter))]">
+                      Latest price
+                    </span>
+                  </div>
+                </div>
+              )}
+            </div>
           </div>
 
-          {/* ── SUMMARY STATS ── */}
+          {/* SUMMARY STATS */}
           {tracker.price_logs && tracker.price_logs.length >= 2 && (
             <>
-              <div className="ornament-divider mt-6 mb-6">
-                <span className="text-xs font-medium text-[rgb(var(--muted))]">Price statistics</span>
+              <div className="ornament-divider mt-8 mb-6">
+                <span className="text-sm font-medium text-[rgb(var(--muted))]">Price statistics</span>
               </div>
-              <div className="flex items-center gap-8 flex-wrap">
+              <div className="flex items-center gap-10 flex-wrap">
                 {(() => {
                   const prices = tracker.price_logs.map((l) => l.market_price);
                   const avg = prices.reduce((a, b) => a + b, 0) / prices.length;
@@ -196,22 +197,22 @@ export default async function TrackerDetailPage({ params }) {
           )}
         </div>
 
-        {/* ── ERROR BANNER ── */}
+        {/* ERROR BANNER */}
         {hasError && (
-          <div className="mb-8 p-4 rounded-lg border border-[rgb(var(--danger))]/20 bg-[rgb(var(--danger))]/5 flex gap-3 items-start">
-            <div className="w-2 h-2 rounded-full bg-[rgb(var(--danger))] mt-1.5 shrink-0" />
+          <div className="mb-8 p-5 rounded-lg border border-[rgb(var(--danger))]/20 bg-[rgb(var(--danger))]/5 flex gap-3 items-start">
+            <div className="w-2.5 h-2.5 rounded-full bg-[rgb(var(--danger))] mt-1 shrink-0" />
             <div>
-              <h3 className="text-sm font-medium text-[rgb(var(--danger))]">
+              <h3 className="text-sm font-semibold text-[rgb(var(--danger))]">
                 Scraping error
               </h3>
-              <p className="text-xs text-[rgb(var(--muted))] mt-0.5">
+              <p className="text-sm text-[rgb(var(--muted))] mt-1">
                 {tracker.last_error_message} (code: {tracker.last_error_code})
               </p>
             </div>
           </div>
         )}
 
-        {/* ── CONTENT: Chart + Dashboard ── */}
+        {/* DASHBOARD */}
         <TrackerDashboard tracker={tracker} />
       </div>
     </main>
