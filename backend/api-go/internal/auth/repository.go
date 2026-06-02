@@ -27,6 +27,11 @@ type LoginRequest struct {
 	Password string `json:"password"`
 }
 
+type ChangePasswordRequest struct {
+	CurrentPassword string `json:"current_password"`
+	NewPassword     string `json:"new_password"`
+}
+
 type AuthResponse struct {
 	Token string `json:"token"`
 	User  User   `json:"user"`
@@ -83,9 +88,30 @@ func (r *Repository) FindByEmail(ctx context.Context, email string) (*User, erro
 
 func (r *Repository) FindByID(ctx context.Context, id string) (*User, error) {
 	var user User
-	err := r.db.GetContext(ctx, &user, "SELECT id, email, created_at FROM users WHERE id = $1", id)
+	err := r.db.GetContext(ctx, &user, "SELECT id, email, password_hash, created_at FROM users WHERE id = $1", id)
 	if err != nil {
 		return nil, err
 	}
 	return &user, nil
+}
+
+func (r *Repository) ChangePassword(ctx context.Context, userID, currentPassword, newPassword string) error {
+	user, err := r.FindByID(ctx, userID)
+	if err != nil {
+		return errors.New("user not found")
+	}
+
+	// Verify current password
+	if err := bcrypt.CompareHashAndPassword([]byte(user.PasswordHash), []byte(currentPassword)); err != nil {
+		return errors.New("current password is incorrect")
+	}
+
+	// Hash new password
+	hash, err := bcrypt.GenerateFromPassword([]byte(newPassword), bcrypt.DefaultCost)
+	if err != nil {
+		return err
+	}
+
+	_, err = r.db.ExecContext(ctx, "UPDATE users SET password_hash = $1 WHERE id = $2", string(hash), userID)
+	return err
 }

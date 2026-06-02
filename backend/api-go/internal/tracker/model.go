@@ -15,7 +15,7 @@ type Tracker struct {
 	ScrapeIntervalMinutes int        `db:"scrape_interval_minutes" json:"scrape_interval_minutes"`
 	LastScrapedAt         *time.Time `db:"last_scraped_at" json:"last_scraped_at"`
 	UserID                *string    `db:"user_id" json:"user_id"`
-	UserName              *string    `db:"user_name" json:"user_name"`
+	UserName              string     `db:"user_name" json:"user_name"`
 }
 
 type PriceLog struct {
@@ -43,11 +43,19 @@ type TrackerDetail struct {
 	Tracker
 	PriceLogs []PriceLog `json:"price_logs"`
 	NewsLogs  []NewsLog  `json:"news_logs"`
+	ShareLink *ShareLink `json:"share_link,omitempty"`
 }
 
-type User struct {
-	ID           string    `db:"id" json:"id"`
-	Email        string    `db:"email" json:"email"`
-	PasswordHash string    `db:"password_hash" json:"-"`
-	CreatedAt    time.Time `db:"created_at" json:"created_at"`
+type ShareLink struct {
+	ID        string    `db:"id" json:"id"`
+	TrackerID string    `db:"tracker_id" json:"tracker_id"`
+	Token     string    `db:"token" json:"token"`
+	CreatedAt time.Time `db:"created_at" json:"created_at"`
+}
+
+type UserStats struct {
+	TotalTrackers  int `db:"total_trackers" json:"total_trackers"`
+	ActiveTrackers int `db:"active_trackers" json:"active_trackers"`
+	TotalViews     int `db:"total_views" json:"total_views"`
+	TotalDataPoints int `db:"total_data_points" json:"total_data_points"`
 }

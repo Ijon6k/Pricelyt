@@ -6,6 +6,7 @@ import SourceBadge from "@/app/components/SourceBadge";
 import { ArrowLeft, Eye, Calendar } from "lucide-react";
 import AutoRefresh from "@/app/components/AutoRefresh";
 import DeleteTrackerButton from "@/app/components/DeleteTrackerButton";
+import ShareButton from "@/app/components/ShareButton";
 
 function Stat({ label, value }) {
   return (
@@ -96,7 +97,10 @@ export default async function TrackerDetailPage({ params }) {
           >
             <ArrowLeft size={16} /> Back to overview
           </Link>
-          <DeleteTrackerButton id={tracker.id} />
+          <div className="flex items-center gap-3">
+            <ShareButton trackerId={tracker.id} />
+            <DeleteTrackerButton id={tracker.id} />
+          </div>
         </div>
 
         {/* HEADER — now 2-column on desktop */}

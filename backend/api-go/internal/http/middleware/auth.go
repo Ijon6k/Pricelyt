@@ -6,12 +6,8 @@ import (
 	"strings"
 
 	"api/internal/auth"
+	"api/internal/contextkeys"
 )
-
-type contextKey string
-
-const ContextKeyUserID = contextKey("user_id")
-const ContextKeyEmail = contextKey("email")
 
 func AuthRequired(next http.HandlerFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
@@ -33,22 +29,8 @@ func AuthRequired(next http.HandlerFunc) http.HandlerFunc {
 			return
 		}
 
-		ctx := context.WithValue(r.Context(), ContextKeyUserID, claims.UserID)
-		ctx = context.WithValue(ctx, ContextKeyEmail, claims.Email)
+		ctx := context.WithValue(r.Context(), contextkeys.UserIDKey, claims.UserID)
+		ctx = context.WithValue(ctx, contextkeys.EmailKey, claims.Email)
 		next(w, r.WithContext(ctx))
 	}
-}
-
-func GetUserID(ctx context.Context) string {
-	if v, ok := ctx.Value(ContextKeyUserID).(string); ok {
-		return v
-	}
-	return ""
-}
-
-func GetUserEmail(ctx context.Context) string {
-	if v, ok := ctx.Value(ContextKeyEmail).(string); ok {
-		return v
-	}
-	return ""
 }

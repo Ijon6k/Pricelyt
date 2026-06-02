@@ -3,6 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useAuth } from "../lib/AuthContext";
+import { User } from "lucide-react";
 
 export default function AuthNav() {
   const { user, logout } = useAuth();
@@ -16,9 +17,13 @@ export default function AuthNav() {
   if (user) {
     return (
       <div className="flex items-center gap-3">
-        <span className="text-xs text-[rgb(var(--muted))] truncate max-w-[140px]">
-          {user.email}
-        </span>
+        <Link
+          href="/profile"
+          className="flex items-center gap-1.5 text-xs text-[rgb(var(--muted))] hover:text-[rgb(var(--fg))] transition-colors no-underline"
+        >
+          <User size={14} />
+          <span className="truncate max-w-[120px]">{user.email}</span>
+        </Link>
         <button
           onClick={logout}
           className="text-xs font-medium uppercase tracking-wider text-[rgb(var(--muted))] hover:text-[rgb(var(--fg))] transition-colors"

@@ -28,9 +28,7 @@ func (s *Service) GetTrackerByID(id string) (*Tracker, error) {
 	if err := s.repo.IncrementViewCount(id); err != nil {
 		return nil, err
 	}
-
 	return s.repo.FindByID(id)
-
 }
 
 func (s *Service) GetTrackerDetailByID(id string) (*TrackerDetail, error) {
@@ -46,15 +44,17 @@ func (s *Service) GetTrackerDetailByID(id string) (*TrackerDetail, error) {
 
 	prices, _ := s.repo.FindPriceLogs(id)
 	news, _ := s.repo.FindNewsLogs(id)
+	shareLink, _ := s.repo.GetShareLinkByTrackerID(id)
 
 	return &TrackerDetail{
 		Tracker:   *t,
 		PriceLogs: prices,
 		NewsLogs:  news,
+		ShareLink: shareLink,
 	}, nil
 }
 
-func (s *Service) AddTracker(ctx context.Context, keyword string) (*Tracker, error) {
+func (s *Service) AddTracker(ctx context.Context, keyword string, userID *string) (*Tracker, error) {
 	keyword = strings.TrimSpace(keyword)
 	if keyword == "" {
 		return nil, errors.New("keyword cannot be empty")
@@ -63,11 +63,7 @@ func (s *Service) AddTracker(ctx context.Context, keyword string) (*Tracker, err
 		return nil, errors.New("keyword must not exceed 200 characters")
 	}
 
-	result, err := s.repo.AddTracker(ctx, keyword)
-	if err != nil {
-		return nil, err
-	}
-	return result, nil
+	return s.repo.AddTracker(ctx, keyword, userID)
 }
 
 func (s *Service) DeleteTracker(ctx context.Context, id string) error {
@@ -102,7 +98,6 @@ func (s *Service) SearchTracker(ctx context.Context, query string) (*SearchRespo
 
 	isExact := false
 	queryLower := strings.ToLower(query)
-
 	for _, t := range trackers {
 		if strings.ToLower(t.Keyword) == queryLower {
 			isExact = true
@@ -116,4 +111,54 @@ func (s *Service) SearchTracker(ctx context.Context, query string) (*SearchRespo
 		response.MatchType = "PARTIAL"
 	}
 	return response, nil
+}
+
+// --- Share methods ---
+
+func (s *Service) CreateShareLink(ctx context.Context, trackerID string) (string, error) {
+	// Verify tracker exists
+	_, err := s.repo.FindByID(trackerID)
+	if err != nil {
+		return "", errors.New("tracker not found")
+	}
+	return s.repo.CreateShareLink(ctx, trackerID)
+}
+
+func (s *Service) GetShareLink(trackerID string) (*ShareLink, error) {
+	return s.repo.GetShareLinkByTrackerID(trackerID)
+}
+
+func (s *Service) DeleteShareLink(ctx context.Context, trackerID string) error {
+	return s.repo.DeleteShareLink(ctx, trackerID)
+}
+
+func (s *Service) GetSharedTracker(token string) (*TrackerDetail, error) {
+	share, err := s.repo.GetShareByToken(token)
+	if err != nil {
+		return nil, err
+	}
+
+	t, err := s.repo.FindByID(share.TrackerID)
+	if err != nil {
+		return nil, err
+	}
+
+	prices, _ := s.repo.FindPriceLogs(share.TrackerID)
+	news, _ := s.repo.FindNewsLogs(share.TrackerID)
+
+	return &TrackerDetail{
+		Tracker:   *t,
+		PriceLogs: prices,
+		NewsLogs:  news,
+	}, nil
+}
+
+// --- Profile methods ---
+
+func (s *Service) GetUserStats(ctx context.Context, userID string) (*UserStats, error) {
+	return s.repo.GetUserStats(ctx, userID)
+}
+
+func (s *Service) GetUserTrackers(ctx context.Context, userID string) ([]Tracker, error) {
+	return s.repo.GetUserTrackers(ctx, userID)
 }

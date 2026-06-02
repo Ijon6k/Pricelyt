@@ -4,9 +4,7 @@ import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { cookies } from "next/headers";
 
-// Server-side only: talks to the API over the internal Docker network and
-// holds the admin key in the server environment. The browser never sees the
-// key — it only invokes this action.
+// Server-side only: talks to the API over the internal Docker network.
 function getInternalBase() {
   return process.env.API_BASE_INTERNAL || "http://api:8080/api";
 }
@@ -15,8 +13,7 @@ export async function deleteTrackerAction(id) {
   const cookieStore = await cookies();
   const token = cookieStore.get("token")?.value;
 
-  // Auth check: rely on the API to verify the JWT. If there's no token at all,
-  // we short-circuit here instead of making a round trip.
+  // Auth check: require JWT token
   if (!token) {
     throw new Error("Authentication required");
   }
@@ -25,7 +22,6 @@ export async function deleteTrackerAction(id) {
     method: "DELETE",
     headers: {
       Authorization: `Bearer ${token}`,
-      "X-Admin-Key": process.env.ADMIN_KEY || "change-me",
     },
     cache: "no-store",
   });

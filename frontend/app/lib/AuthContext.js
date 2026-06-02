@@ -34,6 +34,8 @@ export function AuthProvider({ children }) {
   const login = useCallback((newToken, newUser) => {
     localStorage.setItem("pricelyt_token", newToken);
     localStorage.setItem("pricelyt_user", JSON.stringify(newUser));
+    // Also set cookie for server actions
+    document.cookie = `token=${newToken}; path=/; max-age=86400; SameSite=Lax`;
     setState({ token: newToken, user: newUser });
   }, []);
 
@@ -41,6 +43,7 @@ export function AuthProvider({ children }) {
   const logout = useCallback(() => {
     localStorage.removeItem("pricelyt_token");
     localStorage.removeItem("pricelyt_user");
+    document.cookie = "token=; path=/; max-age=0";
     setState({ token: null, user: null });
     router.push("/");
   }, [router]);
