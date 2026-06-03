@@ -13,6 +13,7 @@ import {
 export default function TrackerDashboard({ tracker }) {
   const hasEnoughData = tracker.price_logs && tracker.price_logs.length >= 2;
   const [activeTab, setActiveTab] = useState(hasEnoughData ? "chart" : "table");
+  const [isSidebarOpen, setSidebarOpen] = useState(false);
 
   const formatCurrency = (val) =>
     new Intl.NumberFormat("en-US", {
@@ -59,7 +60,7 @@ export default function TrackerDashboard({ tracker }) {
         </div>
 
         {/* Chart / Table */}
-        <div className="min-h-[480px] border border-[rgb(var(--border))] rounded-lg overflow-hidden">
+        <div className="min-h-[380px] sm:min-h-[420px] md:min-h-[480px] border border-[rgb(var(--border))] rounded-lg overflow-hidden">
           {activeTab === "chart" && (
             <div className="p-6 md:p-8">
               <div className="mb-6">
@@ -70,7 +71,7 @@ export default function TrackerDashboard({ tracker }) {
                   Market price over time.
                 </p>
               </div>
-              <div className="w-full h-[450px]">
+              <div className="w-full h-[320px] sm:h-[400px] md:h-[450px]">
                 <PriceChart data={tracker.price_logs} />
               </div>
             </div>
@@ -126,10 +127,34 @@ export default function TrackerDashboard({ tracker }) {
         </div>
       </div>
 
-      {/* SIDEBAR: Related News — spans 2 cols */}
+      {/* SIDEBAR: Related News — mobile collapsible, desktop always visible */}
       <div className="xl:col-span-2">
+        {/* Mobile toggle */}
+        <button
+          onClick={() => setSidebarOpen(!isSidebarOpen)}
+          className="xl:hidden w-full flex items-center justify-between px-5 py-4 border border-[rgb(var(--border))] rounded-lg text-sm font-semibold text-[rgb(var(--fg))]"
+        >
+          <span className="flex items-center gap-2">
+            <Newspaper size={18} className="text-[rgb(var(--muted))]" />
+            Related news
+          </span>
+          <span className="flex items-center gap-2">
+            <span className="text-xs text-[rgb(var(--muted-lighter))] tabular-nums">
+              {tracker.news_logs?.length || 0}
+            </span>
+            <svg
+              className={`w-4 h-4 transition-transform ${isSidebarOpen ? "rotate-180" : ""}`}
+              fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"
+            >
+              <path d="M6 9l6 6 6-6" />
+            </svg>
+          </span>
+        </button>
+
+        {/* Sidebar content — hidden on mobile unless toggled */}
+        <div className={`xl:block mt-3 xl:mt-0 ${isSidebarOpen ? "block" : "hidden"}`}>
         <div className="sticky top-24 border border-[rgb(var(--border))] rounded-lg overflow-hidden">
-          <div className="px-5 py-4 border-b border-[rgb(var(--border))] flex items-center justify-between">
+          <div className="hidden xl:flex px-5 py-4 border-b border-[rgb(var(--border))] items-center justify-between">
             <div className="flex items-center gap-2">
               <Newspaper size={18} className="text-[rgb(var(--muted))]" />
               <h3 className="text-sm font-semibold text-[rgb(var(--fg))]">
@@ -186,6 +211,7 @@ export default function TrackerDashboard({ tracker }) {
             )}
           </div>
         </div>
+        </div>{/* close collapsible wrapper */}
       </div>
     </div>
   );

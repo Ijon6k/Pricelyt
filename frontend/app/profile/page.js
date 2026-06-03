@@ -5,20 +5,20 @@ import Link from "next/link";
 import { useAuth } from "../lib/AuthContext";
 import { fetchProfile, fetchProfileStats, changePassword, updateProfile } from "../lib/api";
 import {
-  User,
-  BarChart3,
-  Eye,
-  Database,
   ArrowLeft,
   Check,
   AlertCircle,
   LogOut,
   Settings,
   AtSign,
+  Loader2,
 } from "lucide-react";
+
+export const dynamic = "force-dynamic";
 
 export default function ProfilePage() {
   const { user, token, logout } = useAuth();
+  const [mounted, setMounted] = useState(false);
   const [profile, setProfile] = useState(null);
   const [stats, setStats] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -41,6 +41,10 @@ export default function ProfilePage() {
   const [pwLoading, setPwLoading] = useState(false);
 
   useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  useEffect(() => {
     if (!token) return;
 
     async function load() {
@@ -60,6 +64,18 @@ export default function ProfilePage() {
     }
     load();
   }, [token]);
+
+  // Don't render anything until client-side mounted (avoids hydration mismatch)
+  if (!mounted) {
+    return (
+      <main className="min-h-screen flex items-center justify-center">
+        <div className="flex items-center gap-3 text-sm text-[rgb(var(--muted))]">
+          <Loader2 size={16} className="animate-spin" />
+          Loading…
+        </div>
+      </main>
+    );
+  }
 
   if (!user) {
     return (

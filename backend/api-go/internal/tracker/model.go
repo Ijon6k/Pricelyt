@@ -14,10 +14,15 @@ type Tracker struct {
 	LastErrorAt           *time.Time `db:"last_error_at" json:"last_error_at"`
 	ScrapeIntervalMinutes int        `db:"scrape_interval_minutes" json:"scrape_interval_minutes"`
 	LastScrapedAt         *time.Time `db:"last_scraped_at" json:"last_scraped_at"`
+	ProcessingStartedAt   *time.Time `db:"processing_started_at" json:"processing_started_at"`
 	UserID                *string    `db:"user_id" json:"user_id"`
 	UserName              string     `db:"user_name" json:"user_name"`
 	Summary               *string    `db:"summary" json:"summary"`
 	SummaryGeneratedAt    *time.Time `db:"summary_generated_at" json:"summary_generated_at"`
+	LatestPrice           *float64   `db:"latest_price" json:"latest_price"`
+	LatestPriceSource     *string    `db:"latest_price_source" json:"latest_price_source"`
+	PreviousPrice         *float64   `db:"previous_price" json:"previous_price"`
+	PriceLogCount         int        `db:"price_log_count" json:"price_log_count"`
 }
 
 type PriceLog struct {

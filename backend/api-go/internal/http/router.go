@@ -47,12 +47,23 @@ func NewRouter(db *sqlx.DB) http.Handler {
 	// public share view (no auth required)
 	apiMux.HandleFunc("GET /share/{token}", handler.GetSharedTracker)
 
+	// queue status (public)
+	apiMux.HandleFunc("GET /queue", handler.GetQueueStatus)
+
 	// user stats & trackers (authenticated)
 	apiMux.HandleFunc("GET /profile/stats", mw.AuthRequired(handler.GetProfileStats))
 	apiMux.HandleFunc("GET /profile/trackers", mw.AuthRequired(handler.GetUserTrackers))
 
 	// summary (authenticated — regenerate on demand)
 	apiMux.HandleFunc("POST /trackers/{id}/summary", mw.AuthRequired(handler.GenerateSummary))
+
+	// watchlist (authenticated)
+	wlRepo := tracker.NewWatchlistRepository(db)
+	wlHandler := tracker.NewWatchlistHandler(wlRepo)
+	apiMux.HandleFunc("GET /watchlist", mw.AuthRequired(wlHandler.GetWatchlist))
+	apiMux.HandleFunc("POST /watchlist/{id}", mw.AuthRequired(wlHandler.AddToWatchlist))
+	apiMux.HandleFunc("DELETE /watchlist/{id}", mw.AuthRequired(wlHandler.RemoveFromWatchlist))
+	apiMux.HandleFunc("GET /watchlist/{id}/status", mw.AuthRequired(wlHandler.GetWatchlistStatus))
 
 	rootMux.Handle("/api/", http.StripPrefix("/api", apiMux))
 	return rootMux

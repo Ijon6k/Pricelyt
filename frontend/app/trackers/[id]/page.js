@@ -107,7 +107,7 @@ export default async function TrackerDetailPage({ params }) {
         {/* HEADER — 2-column on desktop */}
         <div className="mb-8 pb-8 border-b border-[rgb(var(--border))]">
           {/* Meta row */}
-          <div className="flex items-center gap-5 mb-6">
+          <div className="flex flex-wrap items-center gap-x-5 gap-y-2 mb-6">
             <StatusBadge status={tracker.status} />
             {latestLog?.source && <SourceBadge source={latestLog.source} />}
             {dataPoints > 0 && (
@@ -131,7 +131,7 @@ export default async function TrackerDetailPage({ params }) {
           <div className="grid grid-cols-1 lg:grid-cols-5 gap-8 items-end">
             {/* Left: product name + meta */}
             <div className="lg:col-span-3">
-              <h1 className="text-3xl md:text-4xl lg:text-5xl font-semibold tracking-tight leading-[1.1] mb-3 capitalize">
+              <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-semibold tracking-tight leading-[1.1] mb-3 capitalize">
                 {tracker.keyword}
               </h1>
               <DealScore priceLogs={tracker.price_logs} />
@@ -177,7 +177,7 @@ export default async function TrackerDetailPage({ params }) {
               <div className="ornament-divider mt-8 mb-6">
                 <span className="text-sm font-medium text-[rgb(var(--muted))]">Price statistics</span>
               </div>
-              <div className="flex items-center gap-10 flex-wrap">
+              <div className="flex items-center gap-6 md:gap-10 flex-wrap">
                 {(() => {
                   const prices = tracker.price_logs.map((l) => l.market_price);
                   const avg = prices.reduce((a, b) => a + b, 0) / prices.length;

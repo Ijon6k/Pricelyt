@@ -267,6 +267,45 @@ func (h *Handler) GetUserTrackers(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(trackers)
 }
 
+// --- Queue status ---
+
+type QueueStatus struct {
+	PendingCount    int            `json:"pending_count"`
+	ProcessingCount int            `json:"processing_count"`
+	Positions       map[string]int `json:"positions"` // tracker_id -> position (1-indexed)
+}
+
+func (h *Handler) GetQueueStatus(w http.ResponseWriter, r *http.Request) {
+	// Count pending trackers ordered by created_at (same order as worker picks)
+	var pending []string
+	query := `SELECT id FROM trackers WHERE status = 'PENDING' ORDER BY created_at ASC`
+	if err := h.service.repo.db.Select(&pending, query); err != nil {
+		http.Error(w, `{"error":"failed"}`, http.StatusInternalServerError)
+		return
+	}
+
+	var processing []string
+	query = `SELECT id FROM trackers WHERE status = 'PROCESSING' ORDER BY processing_started_at ASC`
+	if err := h.service.repo.db.Select(&processing, query); err != nil {
+		http.Error(w, `{"error":"failed"}`, http.StatusInternalServerError)
+		return
+	}
+
+	positions := make(map[string]int)
+	for i, id := range pending {
+		positions[id] = i + 1 // 1-indexed
+	}
+
+	status := QueueStatus{
+		PendingCount:    len(pending),
+		ProcessingCount: len(processing),
+		Positions:       positions,
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(status)
+}
+
 // --- Summary handler ---
 
 func (h *Handler) GenerateSummary(w http.ResponseWriter, r *http.Request) {

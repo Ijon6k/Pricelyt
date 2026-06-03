@@ -293,10 +293,10 @@ def run():
 
             insert_price_logs(tracker_id, price_result)
 
-            # News Scrape
-            logger.info("Starting news scrape...")
-            news_result = asyncio.run(scrape_news(keyword))
-            insert_news_logs(tracker_id, news_result)
+            # News Scrape — DISABLED (Erik: gausah di scrape)
+            # logger.info("Starting news scrape...")
+            # news_result = asyncio.run(scrape_news(keyword))
+            # insert_news_logs(tracker_id, news_result)
 
             mark_ready(tracker_id)
             logger.info("Tracker %s marked READY.", keyword)

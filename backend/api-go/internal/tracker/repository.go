@@ -23,13 +23,31 @@ const trackerSelectCols = `
 	t.error_count, t.last_error_code, t.last_error_message, t.last_error_at,
 	t.scrape_interval_minutes, t.last_scraped_at,
 	t.user_id, COALESCE(u.email, '') as user_name,
-	t.summary, t.summary_generated_at`
+	t.summary, t.summary_generated_at,
+	latest_prices.market_price AS latest_price,
+	latest_prices.source AS latest_price_source,
+	prev_prices.market_price AS previous_price,
+	COALESCE(price_counts.cnt, 0) AS price_log_count`
 
 func (r *Repository) FindAll() ([]Tracker, error) {
 	var trackers []Tracker
 	query := `SELECT` + trackerSelectCols + `
 		FROM trackers t
 		LEFT JOIN users u ON t.user_id = u.id
+		LEFT JOIN LATERAL (
+			SELECT market_price, source FROM price_logs
+			WHERE tracker_id = t.id
+			ORDER BY scraped_at DESC LIMIT 1
+		) latest_prices ON true
+		LEFT JOIN LATERAL (
+			SELECT market_price FROM price_logs
+			WHERE tracker_id = t.id
+			ORDER BY scraped_at DESC LIMIT 1 OFFSET 1
+		) prev_prices ON true
+		LEFT JOIN LATERAL (
+			SELECT COUNT(*) as cnt FROM price_logs
+			WHERE tracker_id = t.id
+		) price_counts ON true
 		ORDER BY t.created_at DESC
 	`
 	err := r.db.Select(&trackers, query)
@@ -44,6 +62,20 @@ func (r *Repository) FindByID(id string) (*Tracker, error) {
 	query := `SELECT` + trackerSelectCols + `
 		FROM trackers t
 		LEFT JOIN users u ON t.user_id = u.id
+		LEFT JOIN LATERAL (
+			SELECT market_price, source FROM price_logs
+			WHERE tracker_id = t.id
+			ORDER BY scraped_at DESC LIMIT 1
+		) latest_prices ON true
+		LEFT JOIN LATERAL (
+			SELECT market_price FROM price_logs
+			WHERE tracker_id = t.id
+			ORDER BY scraped_at DESC LIMIT 1 OFFSET 1
+		) prev_prices ON true
+		LEFT JOIN LATERAL (
+			SELECT COUNT(*) as cnt FROM price_logs
+			WHERE tracker_id = t.id
+		) price_counts ON true
 		WHERE t.id = $1
 		LIMIT 1
 	`
@@ -144,6 +176,20 @@ func (r *Repository) Search(ctx context.Context, keyword string) ([]Tracker, err
 	query := `SELECT` + trackerSelectCols + `
 		FROM trackers t
 		LEFT JOIN users u ON t.user_id = u.id
+		LEFT JOIN LATERAL (
+			SELECT market_price, source FROM price_logs
+			WHERE tracker_id = t.id
+			ORDER BY scraped_at DESC LIMIT 1
+		) latest_prices ON true
+		LEFT JOIN LATERAL (
+			SELECT market_price FROM price_logs
+			WHERE tracker_id = t.id
+			ORDER BY scraped_at DESC LIMIT 1 OFFSET 1
+		) prev_prices ON true
+		LEFT JOIN LATERAL (
+			SELECT COUNT(*) as cnt FROM price_logs
+			WHERE tracker_id = t.id
+		) price_counts ON true
 		WHERE t.keyword ILIKE $1
 		ORDER BY length(t.keyword) ASC, t.created_at DESC
 		LIMIT 20
@@ -256,6 +302,20 @@ func (r *Repository) GetUserTrackers(ctx context.Context, userID string) ([]Trac
 	query := `SELECT` + trackerSelectCols + `
 		FROM trackers t
 		LEFT JOIN users u ON t.user_id = u.id
+		LEFT JOIN LATERAL (
+			SELECT market_price, source FROM price_logs
+			WHERE tracker_id = t.id
+			ORDER BY scraped_at DESC LIMIT 1
+		) latest_prices ON true
+		LEFT JOIN LATERAL (
+			SELECT market_price FROM price_logs
+			WHERE tracker_id = t.id
+			ORDER BY scraped_at DESC LIMIT 1 OFFSET 1
+		) prev_prices ON true
+		LEFT JOIN LATERAL (
+			SELECT COUNT(*) as cnt FROM price_logs
+			WHERE tracker_id = t.id
+		) price_counts ON true
 		WHERE t.user_id = $1
 		ORDER BY t.created_at DESC
 	`

@@ -188,6 +188,44 @@ export async function fetchSharedTracker(shareToken) {
   return res.json();
 }
 
+// --- Queue ---
+
+export async function fetchQueue() {
+  const res = await fetch(`${getBaseUrl()}/queue`, {
+    cache: "no-store",
+  });
+  if (!res.ok) throw new Error("Failed to fetch queue");
+  return res.json();
+}
+
+// --- Watchlist ---
+
+export async function fetchWatchlist(token) {
+  const res = await fetch(`${getBaseUrl()}/watchlist`, {
+    headers: { Authorization: `Bearer ${token}` },
+    cache: "no-store",
+  });
+  if (!res.ok) throw new Error("Failed to fetch watchlist");
+  return res.json();
+}
+
+export async function addToWatchlist(trackerId, token) {
+  const res = await fetch(`${getBaseUrl()}/watchlist/${trackerId}`, {
+    method: "POST",
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  if (!res.ok) throw new Error("Failed to add to watchlist");
+  return res.json();
+}
+
+export async function removeFromWatchlist(trackerId, token) {
+  const res = await fetch(`${getBaseUrl()}/watchlist/${trackerId}`, {
+    method: "DELETE",
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  if (!res.ok) throw new Error("Failed to remove from watchlist");
+}
+
 // --- Summary ---
 
 export async function generateSummary(trackerId, token) {

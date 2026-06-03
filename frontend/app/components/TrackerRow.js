@@ -8,6 +8,7 @@ import {
   ArrowDownRight,
   Minus,
 } from "lucide-react";
+import LoveButton from "./LoveButton";
 
 export default function TrackerRow({ tracker, rank }) {
   const {
@@ -17,19 +18,18 @@ export default function TrackerRow({ tracker, rank }) {
     created_at,
     view_count = 0,
     user_name,
-    price_logs = [],
+    latest_price,
+    previous_price,
+    latest_price_source,
+    price_log_count = 0,
   } = tracker || {};
 
-  const latestLog =
-    price_logs.length > 0 ? price_logs[price_logs.length - 1] : null;
-  const hasPrice = !!latestLog;
-
-  const prevLog = price_logs.length > 1 ? price_logs[price_logs.length - 2] : null;
-  const priceChange = hasPrice && prevLog
-    ? latestLog.market_price - prevLog.market_price
+  const hasPrice = latest_price != null;
+  const priceChange = hasPrice && previous_price != null
+    ? latest_price - previous_price
     : null;
-  const priceChangePct = hasPrice && prevLog && prevLog.market_price > 0
-    ? ((latestLog.market_price - prevLog.market_price) / prevLog.market_price) * 100
+  const priceChangePct = hasPrice && previous_price != null && previous_price > 0
+    ? ((latest_price - previous_price) / previous_price) * 100
     : null;
 
   const formattedDate = created_at
@@ -56,22 +56,21 @@ export default function TrackerRow({ tracker, rank }) {
   };
 
   const statusCfg = getStatusConfig(status);
-  const prices = price_logs.map((l) => l.market_price);
 
   return (
     <Link
       href={`/trackers/${id}`}
       className="group block no-underline border-b border-[rgb(var(--border))] last:border-none"
     >
-      <div className="flex items-center gap-4 md:gap-6 px-2 py-4 hover:bg-[rgb(var(--card-hover))] transition-colors rounded-sm">
+      <div className="flex items-center gap-2 sm:gap-4 md:gap-6 px-2 py-4 hover:bg-[rgb(var(--card-hover))] transition-colors rounded-sm">
         {rank !== undefined && (
-          <span className="text-xs text-[rgb(var(--muted-lighter))] tabular-nums w-5 shrink-0 text-right">
+          <span className="hidden sm:block text-xs text-[rgb(var(--muted-lighter))] tabular-nums w-5 shrink-0 text-right">
             {rank}
           </span>
         )}
 
         {/* Status */}
-        <div className="flex items-center gap-2 w-[90px] shrink-0">
+        <div className="flex items-center gap-2 w-[75px] sm:w-[90px] shrink-0">
           {statusCfg.spin ? (
             <Loader2 size={12} className="animate-spin text-blue-500 shrink-0" />
           ) : (
@@ -91,8 +90,8 @@ export default function TrackerRow({ tracker, rank }) {
                 @{user_name}
               </span>
             )}
-            {latestLog?.source && (
-              <SourceBadge source={latestLog.source} />
+            {latest_price_source && (
+              <SourceBadge source={latest_price_source} />
             )}
           </div>
         </div>
@@ -100,21 +99,21 @@ export default function TrackerRow({ tracker, rank }) {
         {/* Sparkline */}
         <div className="hidden md:block w-[80px] shrink-0">
           {hasPrice ? (
-            <Sparkline prices={prices} />
+            <Sparkline count={price_log_count} />
           ) : (
             <span className="text-xs text-[rgb(var(--muted-lighter))]">—</span>
           )}
         </div>
 
         {/* Price */}
-        <div className="w-[130px] shrink-0 text-right">
+        <div className="w-[100px] sm:w-[130px] shrink-0 text-right">
           {hasPrice ? (
             <div>
               <span className="text-sm font-semibold tabular-nums text-[rgb(var(--fg))]">
                 {new Intl.NumberFormat("en-US", {
                   style: "currency",
                   currency: "USD",
-                }).format(latestLog.market_price)}
+                }).format(latest_price)}
               </span>
               {priceChange !== null && priceChangePct !== null && (
                 <div className="flex items-center justify-end gap-1 mt-0.5">
@@ -157,7 +156,8 @@ export default function TrackerRow({ tracker, rank }) {
         </div>
 
         {/* Arrow */}
-        <div className="w-4 shrink-0">
+        <div className="flex items-center gap-1 shrink-0">
+          <LoveButton trackerId={id} size={14} />
           <ArrowUpRight
             size={14}
             className="text-[rgb(var(--muted-lighter))] group-hover:text-[rgb(var(--accent))] transition-colors"

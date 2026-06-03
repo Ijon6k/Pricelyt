@@ -1,5 +1,6 @@
 import SearchBar from "./components/SearchBar";
-import TrackerList from "./components/TrackerList";
+import VerboseTracker from "./components/VerboseTracker";
+import TabsAndWatchlist from "./components/TabsAndWatchlist";
 import { fetchTrackers } from "./lib/api";
 
 export const dynamic = "force-dynamic";
@@ -88,7 +89,7 @@ export default async function HomePage() {
           </svg>
         </div>
 
-        <div className="max-w-screen-2xl mx-auto px-6 xl:px-10 pt-28 pb-24 text-center relative z-10">
+        <div className="max-w-screen-2xl mx-auto px-4 sm:px-6 xl:px-10 pt-16 sm:pt-28 pb-16 sm:pb-24 text-center relative z-10">
           {/* Label */}
           <p className="editorial-label mb-4">Price intelligence platform</p>
 
@@ -110,7 +111,7 @@ export default async function HomePage() {
 
           {/* Stats */}
           {trackers.length > 0 && (
-            <div className="flex items-center justify-center gap-10 mt-14">
+            <div className="flex items-center justify-center gap-6 md:gap-10 mt-14">
               <div className="flex flex-col items-center gap-1.5">
                 <span className="text-3xl font-bold tabular-nums text-[rgb(var(--accent))]">
                   {trackers.length}
@@ -127,7 +128,7 @@ export default async function HomePage() {
               <div className="w-px h-12 bg-[rgb(var(--border))]" />
               <div className="flex flex-col items-center gap-1.5">
                 <span className="text-3xl font-bold tabular-nums text-[rgb(var(--accent))]">
-                  {trackers.reduce((s, t) => s + (t.price_logs?.length || 0), 0)}
+                  {trackers.reduce((s, t) => s + (t.price_log_count || 0), 0)}
                 </span>
                 <span className="editorial-label">Data points</span>
               </div>
@@ -157,7 +158,13 @@ export default async function HomePage() {
             </div>
           </div>
         ) : (
-          <TrackerList trackers={trackers} />
+          <>
+            {/* System activity tracker */}
+            <VerboseTracker trackers={trackers} />
+
+            {/* Tabs: All Trackers / Watchlist */}
+            <TabsAndWatchlist trackers={trackers} />
+          </>
         )}
       </section>
     </main>

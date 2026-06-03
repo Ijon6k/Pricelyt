@@ -8,8 +8,9 @@ import {
   ArrowDownRight,
   Minus,
 } from "lucide-react";
+import LoveButton from "./LoveButton";
 
-export default function TrackerCard({ tracker }) {
+export default function TrackerCard({ tracker, onWatchlistChange }) {
   const {
     id = "",
     keyword = "Unknown item",
@@ -18,19 +19,19 @@ export default function TrackerCard({ tracker }) {
     view_count = 0,
     error_count = 0,
     user_name,
-    price_logs = [],
+    latest_price,
+    previous_price,
+    latest_price_source,
+    price_log_count = 0,
   } = tracker || {};
 
-  const latestLog =
-    price_logs.length > 0 ? price_logs[price_logs.length - 1] : null;
-  const hasPrice = !!latestLog;
+  const hasPrice = latest_price != null;
 
-  const prevLog = price_logs.length > 1 ? price_logs[price_logs.length - 2] : null;
-  const priceChange = hasPrice && prevLog
-    ? latestLog.market_price - prevLog.market_price
+  const priceChange = hasPrice && previous_price != null
+    ? latest_price - previous_price
     : null;
-  const priceChangePct = hasPrice && prevLog && prevLog.market_price > 0
-    ? ((latestLog.market_price - prevLog.market_price) / prevLog.market_price) * 100
+  const priceChangePct = hasPrice && previous_price != null && previous_price > 0
+    ? ((latest_price - previous_price) / previous_price) * 100
     : null;
 
   const formattedDate = created_at
@@ -101,12 +102,14 @@ export default function TrackerCard({ tracker }) {
               </span>
             )}
           </div>
-          <span
+          <div className="flex items-center gap-1.5">
+            <span
             className={`flex items-center px-2 py-0.5 rounded-full text-xs font-medium tracking-wide uppercase ${statusConfig.style}`}
           >
             {statusConfig.icon}
             {statusConfig.label}
           </span>
+            </div>
         </div>
 
         {/* BODY */}
@@ -122,7 +125,7 @@ export default function TrackerCard({ tracker }) {
                   {new Intl.NumberFormat("en-US", {
                     style: "currency",
                     currency: "USD",
-                  }).format(latestLog.market_price)}
+                  }).format(latest_price)}
                 </span>
                 {priceChange !== null && priceChangePct !== null && (
                   <div className="flex items-center gap-1.5 mt-1.5">
@@ -175,10 +178,13 @@ export default function TrackerCard({ tracker }) {
                 </span>
               )}
             </div>
-            <ArrowUpRight
-              size={16}
-              className="text-[rgb(var(--muted))] group-hover:text-[rgb(var(--accent))] transition-colors"
-            />
+            <div className="flex items-center gap-1.5">
+              <LoveButton trackerId={id} size={16} />
+              <ArrowUpRight
+                size={16}
+                className="text-[rgb(var(--muted))] group-hover:text-[rgb(var(--accent))] transition-colors"
+              />
+            </div>
           </div>
         </div>
       </div>

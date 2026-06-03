@@ -4,15 +4,12 @@ import { useState } from "react";
 import {
   Sparkles,
   ChevronDown,
-  RefreshCw,
   Clock,
   TrendingUp,
   TrendingDown,
   Minus,
   AlertTriangle,
 } from "lucide-react";
-import { useAuth } from "../lib/AuthContext";
-import { generateSummary } from "../lib/api";
 
 // ─── Markdown renderer ───
 
@@ -149,33 +146,15 @@ function extractDetails(summary) {
 // ─── Component ───
 
 export default function AISummary({ tracker }) {
-  const { token } = useAuth();
   const [expanded, setExpanded] = useState(false);
-  const [regenerating, setRegenerating] = useState(false);
-  const [localSummary, setLocalSummary] = useState(null);
-  const [error, setError] = useState(null);
 
-  const summary = localSummary || tracker.summary;
+  const summary = tracker.summary;
   const generatedAt = tracker.summary_generated_at;
   const dataPoints = tracker.price_logs?.length || 0;
   const hasEnoughData = dataPoints >= 3;
 
   const headline = extractHeadline(summary);
   const details = extractDetails(summary);
-
-  async function handleRegenerate() {
-    if (!token || regenerating) return;
-    setRegenerating(true);
-    setError(null);
-    try {
-      await generateSummary(tracker.id, token);
-      window.location.reload();
-    } catch (err) {
-      setError(err.message || "Failed to generate summary");
-    } finally {
-      setRegenerating(false);
-    }
-  }
 
   // Not enough data — show minimal state
   if (!summary && !hasEnoughData) {
@@ -235,19 +214,6 @@ export default function AISummary({ tracker }) {
             </div>
 
             <div className="flex items-center gap-2">
-              {token && (
-                <button
-                  onClick={handleRegenerate}
-                  disabled={regenerating}
-                  className="p-1.5 rounded-md hover:bg-[rgb(var(--card-hover))] transition-colors text-[rgb(var(--muted))] hover:text-[rgb(var(--accent))]"
-                  title="Regenerate summary"
-                >
-                  <RefreshCw
-                    size={14}
-                    className={regenerating ? "animate-spin" : ""}
-                  />
-                </button>
-              )}
               {details && (
                 <button
                   onClick={() => setExpanded(!expanded)}

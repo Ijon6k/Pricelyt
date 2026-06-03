@@ -1,20 +1,22 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState } from "react";
 import TrackerCard from "./TrackerCard";
 import TrackerRow from "./TrackerRow";
 import FilterBar from "./FilterBar";
-import { Loader2, Archive, AlertCircle } from "lucide-react";
+import ViewToggle from "./ViewToggle";
+import { Loader2, Archive } from "lucide-react";
 
 const IN_PROGRESS_STATUSES = ["PENDING", "PROCESSING"];
 const TRACKED_STATUSES = ["READY"];
 const ARCHIVED_STATUSES = ["ERROR"];
 
-export default function TrackerList({ trackers: initialTrackers }) {
+export default function TrackerList({ trackers: initialTrackers, onWatchlistChange }) {
   const [sort, setSort] = useState("newest");
+  const [viewMode, setViewMode] = useState("list");
   const [showArchived, setShowArchived] = useState(false);
 
-  const sorted = useMemo(() => {
+  const sorted = (() => {
     const copy = [...initialTrackers];
     switch (sort) {
       case "newest":
@@ -24,7 +26,7 @@ export default function TrackerList({ trackers: initialTrackers }) {
       default:
         return copy;
     }
-  }, [initialTrackers, sort]);
+  })();
 
   const inProgress = sorted.filter((t) => IN_PROGRESS_STATUSES.includes(t.status));
   const tracked = sorted.filter((t) => TRACKED_STATUSES.includes(t.status));
@@ -32,14 +34,15 @@ export default function TrackerList({ trackers: initialTrackers }) {
 
   return (
     <>
-      {/* SORT BAR */}
+      {/* SORT + VIEW TOGGLE */}
       {initialTrackers.length > 1 && (
-        <div className="flex justify-end mb-8">
+        <div className="flex items-center justify-between mb-8 gap-4">
           <FilterBar active={sort} onChange={setSort} />
+          <ViewToggle active={viewMode} onChange={setViewMode} />
         </div>
       )}
 
-      {/* IN PROGRESS SECTION — card grid */}
+      {/* IN PROGRESS SECTION */}
       {inProgress.length > 0 && (
         <section className="mb-14">
           <div className="flex items-baseline justify-between mb-6">
@@ -51,6 +54,8 @@ export default function TrackerList({ trackers: initialTrackers }) {
               {inProgress.length} {inProgress.length === 1 ? "tracker" : "trackers"}
             </span>
           </div>
+
+          {/* In-progress always uses card grid — no view mode here */}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
             {inProgress.map((tracker) => (
               <TrackerCard key={tracker.id} tracker={tracker} />
@@ -59,7 +64,7 @@ export default function TrackerList({ trackers: initialTrackers }) {
         </section>
       )}
 
-      {/* TRACKED SECTION — editorial table/list hybrid */}
+      {/* TRACKED SECTION */}
       <section className="mb-14">
         <div className="flex items-baseline justify-between mb-6">
           <h2 className="editorial-label">Tracked</h2>
@@ -69,19 +74,45 @@ export default function TrackerList({ trackers: initialTrackers }) {
         </div>
 
         {tracked.length > 0 ? (
-          <div className="border-t border-[rgb(var(--border))]">
-            <div className="hidden md:flex items-center gap-4 md:gap-6 px-2 py-2 text-xs font-medium uppercase tracking-wider text-[rgb(var(--muted-lighter))]">
-              <span className="w-[90px] shrink-0">Status</span>
-              <span className="flex-1">Product</span>
-              <span className="w-[80px] shrink-0 hidden md:block">Trend</span>
-              <span className="w-[130px] shrink-0 text-right">Price</span>
-              <span className="hidden lg:block w-[120px] shrink-0 text-right">Views · Created</span>
-              <span className="w-4 shrink-0" />
+          viewMode === "grid" ? (
+            /* GRID VIEW */
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+              {tracked.map((tracker) => (
+                <TrackerCard key={tracker.id} tracker={tracker} />
+              ))}
             </div>
-            {tracked.map((tracker) => (
-              <TrackerRow key={tracker.id} tracker={tracker} />
-            ))}
-          </div>
+          ) : viewMode === "table" ? (
+            /* TABLE VIEW — compact rows */
+            <div className="border-t border-[rgb(var(--border))]">
+              <div className="hidden md:flex items-center gap-2 px-2 py-2 text-xs font-medium uppercase tracking-wider text-[rgb(var(--muted-lighter))]">
+                <span className="w-[28px] shrink-0" />
+                <span className="w-[90px] shrink-0">Status</span>
+                <span className="flex-1">Product</span>
+                <span className="w-[80px] shrink-0 hidden md:block">Trend</span>
+                <span className="w-[130px] shrink-0 text-right">Price</span>
+                <span className="hidden lg:block w-[120px] shrink-0 text-right">Views · Created</span>
+                <span className="w-4 shrink-0" />
+              </div>
+              {tracked.map((tracker, i) => (
+                <TrackerRow key={tracker.id} tracker={tracker} rank={i + 1} />
+              ))}
+            </div>
+          ) : (
+            /* LIST VIEW (default) — editorial table/list hybrid */
+            <div className="border-t border-[rgb(var(--border))]">
+              <div className="hidden md:flex items-center gap-4 md:gap-6 px-2 py-2 text-xs font-medium uppercase tracking-wider text-[rgb(var(--muted-lighter))]">
+                <span className="w-[90px] shrink-0">Status</span>
+                <span className="flex-1">Product</span>
+                <span className="w-[80px] shrink-0 hidden md:block">Trend</span>
+                <span className="w-[130px] shrink-0 text-right">Price</span>
+                <span className="hidden lg:block w-[120px] shrink-0 text-right">Views · Created</span>
+                <span className="w-4 shrink-0" />
+              </div>
+              {tracked.map((tracker) => (
+                <TrackerRow key={tracker.id} tracker={tracker} />
+              ))}
+            </div>
+          )
         ) : (
           <div className="py-20 text-center">
             <div className="w-12 h-12 mx-auto mb-4 rounded-full bg-[rgb(var(--border))]/50 flex items-center justify-center">
@@ -98,7 +129,7 @@ export default function TrackerList({ trackers: initialTrackers }) {
         )}
       </section>
 
-      {/* ARCHIVE SECTION — ERROR trackers */}
+      {/* ARCHIVE SECTION */}
       {archived.length > 0 && (
         <section>
           <button

@@ -194,7 +194,7 @@ export default function PriceChart({ data }) {
                   value: `Low ${formatCurrencyCompact(allTimeMin)}`,
                   position: "insideBottomLeft",
                   fill: "rgb(var(--muted))",
-                  fontSize: 11,
+                  fontSize: 12,
                 }}
               />
             )}
@@ -208,7 +208,7 @@ export default function PriceChart({ data }) {
                   value: `High ${formatCurrencyCompact(allTimeMax)}`,
                   position: "insideTopLeft",
                   fill: "rgb(var(--muted))",
-                  fontSize: 11,
+                  fontSize: 12,
                 }}
               />
             )}
