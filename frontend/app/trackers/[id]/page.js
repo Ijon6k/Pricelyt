@@ -140,8 +140,8 @@ export default async function TrackerDetailPage({ params }) {
             {/* Right: dominant price + change */}
             <div className="lg:col-span-2 text-left lg:text-right">
               {latestLog && (
-                <div className="flex lg:flex-col items-baseline lg:items-end gap-4 lg:gap-1">
-                  <span className="text-5xl md:text-6xl font-bold tabular-nums text-[rgb(var(--fg))] leading-none">
+                <div className="flex flex-col sm:flex-row lg:flex-col items-start lg:items-end gap-2 sm:gap-4 lg:gap-1">
+                  <span className="text-3xl sm:text-4xl md:text-6xl font-bold tabular-nums text-[rgb(var(--fg))] leading-none">
                     {formatCurrency(latestLog.market_price)}
                   </span>
                   <div className="flex lg:flex-col items-baseline lg:items-end gap-2 lg:gap-0.5">
@@ -177,7 +177,7 @@ export default async function TrackerDetailPage({ params }) {
               <div className="ornament-divider mt-8 mb-6">
                 <span className="text-sm font-medium text-[rgb(var(--muted))]">Price statistics</span>
               </div>
-              <div className="flex items-center gap-6 md:gap-10 flex-wrap">
+              <div className="flex items-center gap-4 sm:gap-6 md:gap-10 flex-wrap">
                 {(() => {
                   const prices = tracker.price_logs.map((l) => l.market_price);
                   const avg = prices.reduce((a, b) => a + b, 0) / prices.length;

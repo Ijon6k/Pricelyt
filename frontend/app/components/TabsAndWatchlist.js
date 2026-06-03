@@ -10,7 +10,7 @@ function TabButton({ active, onClick, label, count }) {
   return (
     <button
       onClick={onClick}
-      className={`relative px-4 py-2.5 text-sm font-medium transition-colors rounded-lg ${
+      className={`relative shrink-0 px-4 py-2.5 text-sm font-medium transition-colors rounded-lg ${
         active
           ? "text-[rgb(var(--fg))] bg-[rgb(var(--card))] shadow-sm"
           : "text-[rgb(var(--muted))] hover:text-[rgb(var(--fg))]"
@@ -66,7 +66,7 @@ export default function TabsAndWatchlist({ trackers }) {
   return (
     <div>
       {/* Tabs */}
-      <div className="flex items-center gap-1 p-1 rounded-xl bg-[rgb(var(--bg-muted))] w-fit mb-8">
+      <div className="flex items-center gap-1 p-1 rounded-xl bg-[rgb(var(--border))]/30 w-full sm:w-fit mb-8 overflow-x-auto">
         <TabButton
           active={tab === "all"}
           onClick={() => setTab("all")}

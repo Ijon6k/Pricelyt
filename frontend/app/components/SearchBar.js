@@ -93,7 +93,7 @@ export default function SearchBar({ initialValue = "" }) {
             if (searchResult) setShowDropdown(true);
           }}
           placeholder="Search a product, e.g. RTX 4070, MacBook Air M2"
-          className="w-full bg-transparent px-3 py-3.5 text-base text-[rgb(var(--fg))] outline-none placeholder:text-[rgb(var(--muted))]"
+          className="w-full bg-transparent px-3 py-3 sm:py-3.5 text-sm sm:text-base text-[rgb(var(--fg))] outline-none placeholder:text-[rgb(var(--muted))] placeholder:text-sm"
         />
 
         <div className="pr-2">

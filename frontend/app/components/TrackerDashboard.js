@@ -41,7 +41,7 @@ export default function TrackerDashboard({ tracker }) {
       {/* MAIN: Chart / History — spans 4 cols on wide screens */}
       <div className="xl:col-span-4 space-y-5">
         {/* Tab bar — bigger */}
-        <div className="flex items-center gap-1 p-1 rounded-lg bg-[rgb(var(--border))]/50 w-fit">
+        <div className="flex items-center gap-1 p-1 rounded-lg bg-[rgb(var(--border))]/50 w-full sm:w-fit overflow-x-auto">
           <button
             onClick={() => setActiveTab("chart")}
             disabled={!hasEnoughData}

@@ -100,7 +100,7 @@ export default function VerboseTracker({ trackers }) {
             </div>
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-2">
-                <span className="text-xs font-medium text-[rgb(var(--fg))] truncate max-w-[200px]">
+                <span className="text-xs font-medium text-[rgb(var(--fg))] truncate max-w-[140px] sm:max-w-[200px]">
                   {t.keyword}
                 </span>
                 <span className="text-[10px] px-1.5 py-0.5 rounded bg-blue-500/10 text-blue-500 font-medium uppercase tracking-wider">

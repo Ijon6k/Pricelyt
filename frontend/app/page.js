@@ -94,7 +94,7 @@ export default async function HomePage() {
           <p className="editorial-label mb-4">Price intelligence platform</p>
 
           {/* Headline */}
-          <h1 className="text-5xl md:text-7xl lg:text-8xl font-semibold tracking-tight leading-[1.05] mb-6 max-w-5xl mx-auto">
+          <h1 className="text-4xl sm:text-5xl md:text-7xl lg:text-8xl font-semibold tracking-tight leading-[1.05] mb-6 max-w-5xl mx-auto">
             Know when to buy
           </h1>
 
@@ -111,23 +111,23 @@ export default async function HomePage() {
 
           {/* Stats */}
           {trackers.length > 0 && (
-            <div className="flex items-center justify-center gap-6 md:gap-10 mt-14">
+            <div className="flex flex-col sm:flex-row items-center justify-center gap-4 sm:gap-6 md:gap-10 mt-14">
               <div className="flex flex-col items-center gap-1.5">
-                <span className="text-3xl font-bold tabular-nums text-[rgb(var(--accent))]">
+                <span className="text-2xl sm:text-3xl font-bold tabular-nums text-[rgb(var(--accent))]">
                   {trackers.length}
                 </span>
                 <span className="editorial-label">Tracked products</span>
               </div>
-              <div className="w-px h-12 bg-[rgb(var(--border))]" />
+              <div className="hidden sm:block w-px h-12 bg-[rgb(var(--border))]" />
               <div className="flex flex-col items-center gap-1.5">
-                <span className="text-3xl font-bold tabular-nums text-[rgb(var(--accent))]">
+                <span className="text-2xl sm:text-3xl font-bold tabular-nums text-[rgb(var(--accent))]">
                   {trackers.filter(t => t.status === "READY").length}
                 </span>
                 <span className="editorial-label">Active trackers</span>
               </div>
-              <div className="w-px h-12 bg-[rgb(var(--border))]" />
+              <div className="hidden sm:block w-px h-12 bg-[rgb(var(--border))]" />
               <div className="flex flex-col items-center gap-1.5">
-                <span className="text-3xl font-bold tabular-nums text-[rgb(var(--accent))]">
+                <span className="text-2xl sm:text-3xl font-bold tabular-nums text-[rgb(var(--accent))]">
                   {trackers.reduce((s, t) => s + (t.price_log_count || 0), 0)}
                 </span>
                 <span className="editorial-label">Data points</span>

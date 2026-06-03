@@ -36,7 +36,7 @@ export default function TrackerList({ trackers: initialTrackers, onWatchlistChan
     <>
       {/* SORT + VIEW TOGGLE */}
       {initialTrackers.length > 1 && (
-        <div className="flex items-center justify-between mb-8 gap-4">
+        <div className="flex flex-wrap items-center justify-between mb-8 gap-3">
           <FilterBar active={sort} onChange={setSort} />
           <ViewToggle active={viewMode} onChange={setViewMode} />
         </div>

@@ -119,7 +119,7 @@ export default function PriceChart({ data }) {
   return (
     <div className="w-full h-full flex flex-col">
       {/* Range selector + min/max toggles */}
-      <div className="flex items-center gap-1 mb-4">
+      <div className="flex flex-wrap items-center gap-1 sm:gap-1 mb-4">
         {RANGES.map((r) => {
           const isActive = range === r.key;
           const hasData =
@@ -144,7 +144,7 @@ export default function PriceChart({ data }) {
           );
         })}
 
-        <div className="ml-auto flex items-center gap-3">
+        <div className="sm:ml-auto flex items-center gap-3 mt-1 sm:mt-0">
           <label className="flex items-center gap-1.5 cursor-pointer text-xs text-[rgb(var(--muted))]">
             <input
               type="checkbox"
@@ -194,7 +194,7 @@ export default function PriceChart({ data }) {
                   value: `Low ${formatCurrencyCompact(allTimeMin)}`,
                   position: "insideBottomLeft",
                   fill: "rgb(var(--muted))",
-                  fontSize: 12,
+                  fontSize: 10,
                 }}
               />
             )}
@@ -208,7 +208,7 @@ export default function PriceChart({ data }) {
                   value: `High ${formatCurrencyCompact(allTimeMax)}`,
                   position: "insideTopLeft",
                   fill: "rgb(var(--muted))",
-                  fontSize: 12,
+                  fontSize: 10,
                 }}
               />
             )}

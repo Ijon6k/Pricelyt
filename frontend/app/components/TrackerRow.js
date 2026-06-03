@@ -62,21 +62,22 @@ export default function TrackerRow({ tracker, rank }) {
       href={`/trackers/${id}`}
       className="group block no-underline border-b border-[rgb(var(--border))] last:border-none"
     >
-      <div className="flex items-center gap-2 sm:gap-4 md:gap-6 px-2 py-4 hover:bg-[rgb(var(--card-hover))] transition-colors rounded-sm">
+      <div className="flex items-center gap-1.5 sm:gap-4 md:gap-6 px-2 py-4 hover:bg-[rgb(var(--card-hover))] transition-colors rounded-sm">
+
         {rank !== undefined && (
           <span className="hidden sm:block text-xs text-[rgb(var(--muted-lighter))] tabular-nums w-5 shrink-0 text-right">
             {rank}
           </span>
         )}
 
-        {/* Status */}
-        <div className="flex items-center gap-2 w-[75px] sm:w-[90px] shrink-0">
+        {/* Status — icon only on mobile */}
+        <div className="flex items-center justify-center shrink-0 w-5 sm:w-[90px] sm:justify-start">
           {statusCfg.spin ? (
             <Loader2 size={12} className="animate-spin text-blue-500 shrink-0" />
           ) : (
             <span className={`w-2 h-2 rounded-full shrink-0 ${statusCfg.dot}`} />
           )}
-          <span className="text-xs text-[rgb(var(--muted))]">{statusCfg.label}</span>
+          <span className="hidden sm:inline text-xs text-[rgb(var(--muted))] ml-2">{statusCfg.label}</span>
         </div>
 
         {/* Keyword */}
@@ -106,26 +107,26 @@ export default function TrackerRow({ tracker, rank }) {
         </div>
 
         {/* Price */}
-        <div className="w-[100px] sm:w-[130px] shrink-0 text-right">
+        <div className="w-[85px] sm:w-[130px] shrink-0 text-right">
           {hasPrice ? (
             <div>
-              <span className="text-sm font-semibold tabular-nums text-[rgb(var(--fg))]">
+              <span className="text-xs sm:text-sm font-semibold tabular-nums text-[rgb(var(--fg))]">
                 {new Intl.NumberFormat("en-US", {
                   style: "currency",
                   currency: "USD",
                 }).format(latest_price)}
               </span>
               {priceChange !== null && priceChangePct !== null && (
-                <div className="flex items-center justify-end gap-1 mt-0.5">
+                <div className="flex items-center justify-end gap-0.5 mt-0.5">
                   {priceChange > 0 ? (
-                    <ArrowUpRight size={11} className="text-emerald-500 shrink-0" />
+                    <ArrowUpRight size={10} className="text-emerald-500 shrink-0" />
                   ) : priceChange < 0 ? (
-                    <ArrowDownRight size={11} className="text-red-500 shrink-0" />
+                    <ArrowDownRight size={10} className="text-red-500 shrink-0" />
                   ) : (
-                    <Minus size={11} className="text-[rgb(var(--muted))] shrink-0" />
+                    <Minus size={10} className="text-[rgb(var(--muted))] shrink-0" />
                   )}
                   <span
-                    className={`text-xs font-medium tabular-nums ${
+                    className={`text-[10px] sm:text-xs font-medium tabular-nums ${
                       priceChange > 0
                         ? "text-emerald-500"
                         : priceChange < 0
@@ -156,7 +157,7 @@ export default function TrackerRow({ tracker, rank }) {
         </div>
 
         {/* Arrow */}
-        <div className="flex items-center gap-1 shrink-0">
+        <div className="flex items-center gap-0.5 sm:gap-1 shrink-0">
           <LoveButton trackerId={id} size={14} />
           <ArrowUpRight
             size={14}
