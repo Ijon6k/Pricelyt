@@ -52,6 +52,8 @@ services:
       APP_PORT: "8080"
       DATABASE_URL: postgres://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-postgres}@postgres:5432/${POSTGRES_DB:-pricelyt_db}?sslmode=disable
       ADMIN_KEY: ${ADMIN_KEY:-change-me}
+      JWT_SECRET: ${JWT_SECRET}
+      INTERNAL_API_KEY: ${INTERNAL_API_KEY}
       CORS_ORIGINS: ${CORS_ORIGINS:-http://localhost:4444}
     expose:
       - "8080"
@@ -75,6 +77,7 @@ services:
     environment:
       DATABASE_URL: postgres://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-postgres}@postgres:5432/${POSTGRES_DB:-pricelyt_db}
       IDR_TO_USD_RATE: ${IDR_TO_USD_RATE:-16200}
+      INTERNAL_API_KEY: ${INTERNAL_API_KEY}
     restart: unless-stopped
     tmpfs:
       - /tmp

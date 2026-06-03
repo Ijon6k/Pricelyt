@@ -50,11 +50,11 @@ func main() {
 		"database", dbname,
 	)
 
-	// Init JWT secret — require it in production
+	// Init JWT secret — MUST be set in production
 	jwtSecret := os.Getenv("JWT_SECRET")
 	if jwtSecret == "" {
-		jwtSecret = "pricelyt-jwt-secret-change-in-production"
-		slog.Warn("JWT_SECRET not set — using default (insecure, dev only)")
+		slog.Error("JWT_SECRET is not set — refusing to start with insecure default")
+		os.Exit(1)
 	}
 	auth.Init(jwtSecret)
 

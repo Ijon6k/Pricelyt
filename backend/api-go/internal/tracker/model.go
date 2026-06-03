@@ -15,6 +15,8 @@ type Tracker struct {
 	ScrapeIntervalMinutes int        `db:"scrape_interval_minutes" json:"scrape_interval_minutes"`
 	LastScrapedAt         *time.Time `db:"last_scraped_at" json:"last_scraped_at"`
 	ProcessingStartedAt   *time.Time `db:"processing_started_at" json:"processing_started_at"`
+	ProcessingStep        *string    `db:"processing_step" json:"processing_step"`
+	RescrapeCount         int        `db:"rescrape_count" json:"rescrape_count"`
 	UserID                *string    `db:"user_id" json:"user_id"`
 	UserName              string     `db:"user_name" json:"user_name"`
 	Summary               *string    `db:"summary" json:"summary"`

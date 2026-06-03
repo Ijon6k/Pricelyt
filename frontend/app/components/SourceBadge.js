@@ -1,30 +1,20 @@
 /**
- * Source badge — shows marketplace source (Amazon / eBay).
+ * Source label — simple text showing marketplace (Amazon / eBay).
+ * No badge, no color — just clean text.
  */
 export default function SourceBadge({ source }) {
   if (!source) return null;
 
-  const config = {
-    amazon: {
-      label: "Amazon",
-      color: "text-[rgb(var(--accent))] bg-[rgb(var(--accent-soft))]",
-    },
-    ebay: {
-      label: "eBay",
-      color: "text-amber-600 bg-amber-500/10 dark:text-amber-400 dark:bg-amber-400/10",
-    },
-  };
-
-  const c = config[source.toLowerCase()] || {
-    label: source,
-    color: "text-[rgb(var(--muted))] bg-[rgb(var(--border))]/50",
-  };
+  const label =
+    source.toLowerCase() === "amazon"
+      ? "Amazon"
+      : source.toLowerCase() === "ebay"
+        ? "eBay"
+        : source;
 
   return (
-    <span
-      className={`inline-flex items-center px-1.5 py-0.5 rounded text-xs font-medium tracking-wide uppercase ${c.color}`}
-    >
-      {c.label}
+    <span className="text-xs text-[rgb(var(--muted))] font-medium tracking-wide uppercase">
+      {label}
     </span>
   );
 }

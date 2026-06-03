@@ -68,16 +68,30 @@ func (s *Service) AddTracker(ctx context.Context, keyword string, userID *string
 	return s.repo.AddTracker(ctx, keyword, userID)
 }
 
-func (s *Service) DeleteTracker(ctx context.Context, id string) error {
+func (s *Service) DeleteTracker(ctx context.Context, id, userID string) error {
+	t, err := s.repo.FindByID(id)
+	if err != nil {
+		return errors.New("tracker not found")
+	}
+	if t.UserID != nil && *t.UserID != userID {
+		return errors.New("forbidden")
+	}
 	return s.repo.Delete(ctx, id)
 }
 
-func (s *Service) UpdateScrapeInterval(ctx context.Context, id string, minutes int) error {
+func (s *Service) UpdateScrapeInterval(ctx context.Context, id, userID string, minutes int) error {
 	if minutes < 5 {
 		return errors.New("scrape interval must be at least 5 minutes")
 	}
 	if minutes > 10080 {
 		return errors.New("scrape interval must not exceed 7 days")
+	}
+	t, err := s.repo.FindByID(id)
+	if err != nil {
+		return errors.New("tracker not found")
+	}
+	if t.UserID != nil && *t.UserID != userID {
+		return errors.New("forbidden")
 	}
 	return s.repo.UpdateScrapeInterval(id, minutes)
 }
@@ -159,10 +173,14 @@ func (s *Service) GetSharedTracker(token string) (*TrackerDetail, error) {
 // GenerateSummary creates a natural language summary from price data + news.
 // Template-based — no LLM API needed. Stored in DB, served to all users.
 // Requires at least 3 data points to generate a meaningful summary.
-func (s *Service) GenerateSummary(ctx context.Context, trackerID string) error {
+func (s *Service) GenerateSummary(ctx context.Context, trackerID, userID string) error {
 	t, err := s.repo.FindByID(trackerID)
 	if err != nil {
 		return errors.New("tracker not found")
+	}
+	// Ownership check: skip for internal (worker) calls where userID is empty
+	if userID != "" && t.UserID != nil && *t.UserID != userID {
+		return errors.New("forbidden")
 	}
 
 	prices, _ := s.repo.FindPriceLogs(trackerID)

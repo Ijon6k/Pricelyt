@@ -22,6 +22,7 @@ const trackerSelectCols = `
 	t.id, t.keyword, t.status, t.created_at, t.view_count,
 	t.error_count, t.last_error_code, t.last_error_message, t.last_error_at,
 	t.scrape_interval_minutes, t.last_scraped_at,
+	t.processing_started_at, t.processing_step, t.rescrape_count,
 	t.user_id, COALESCE(u.email, '') as user_name,
 	t.summary, t.summary_generated_at,
 	latest_prices.market_price AS latest_price,
@@ -123,12 +124,16 @@ func (r *Repository) AddTracker(ctx context.Context, keyword string, userID *str
 		VALUES ($1, 'PENDING', $2)
 		RETURNING id, keyword, status, created_at, view_count,
 		          error_count, last_error_code, last_error_message, last_error_at,
-		          scrape_interval_minutes, last_scraped_at, user_id, summary, summary_generated_at
+		          scrape_interval_minutes, last_scraped_at,
+		          processing_started_at, processing_step, rescrape_count,
+		          user_id, summary, summary_generated_at
 	`
 	err := r.db.QueryRowContext(ctx, query, keyword, userID).Scan(
 		&t.ID, &t.Keyword, &t.Status, &t.CreatedAt, &t.ViewCount,
 		&t.ErrorCount, &t.LastErrorCode, &t.LastErrorMessage, &t.LastErrorAt,
-		&t.ScrapeIntervalMinutes, &t.LastScrapedAt, &t.UserID, &t.Summary, &t.SummaryGeneratedAt,
+		&t.ScrapeIntervalMinutes, &t.LastScrapedAt,
+		&t.ProcessingStartedAt, &t.ProcessingStep, &t.RescrapeCount,
+		&t.UserID, &t.Summary, &t.SummaryGeneratedAt,
 	)
 	if err != nil {
 		return nil, err

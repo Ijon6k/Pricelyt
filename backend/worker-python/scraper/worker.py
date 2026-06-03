@@ -9,6 +9,7 @@ import urllib.request
 
 from db import get_conn
 from queries import (
+    SQL_INCREMENT_RESCrape_COUNT,
     SQL_INSERT_NEWS_LOG,
     SQL_INSERT_PRICE_LOG,
     SQL_MARK_ERROR,
@@ -16,6 +17,7 @@ from queries import (
     SQL_MARK_READY,
     SQL_PICK_ELIGIBLE,
     SQL_REAPER_PROCESSING_TIMEOUT,
+    SQL_UPDATE_PROCESSING_STEP,
 )
 from scraper_ebay import scrape_ebay
 from scraper_news import scrape_news
@@ -92,6 +94,34 @@ def mark_error(tracker_id, code, message):
         cur.execute(SQL_MARK_ERROR, (code, safe_msg, tracker_id))
         conn.commit()
     conn.close()
+
+
+def update_processing_step(tracker_id, step):
+    """Update processing_step so frontend knows what this tracker is doing."""
+    conn = get_conn()
+    try:
+        with conn.cursor() as cur:
+            cur.execute(SQL_UPDATE_PROCESSING_STEP, (step, tracker_id))
+        conn.commit()
+    except Exception as e:
+        logger.warning("Failed to update processing_step=%s for %s: %s", step, tracker_id, e)
+        conn.rollback()
+    finally:
+        conn.close()
+
+
+def increment_rescrape_count(tracker_id):
+    """Increment rescrape_count on successful completion."""
+    conn = get_conn()
+    try:
+        with conn.cursor() as cur:
+            cur.execute(SQL_INCREMENT_RESCrape_COUNT, (tracker_id,))
+        conn.commit()
+    except Exception as e:
+        logger.warning("Failed to increment rescrape_count for %s: %s", tracker_id, e)
+        conn.rollback()
+    finally:
+        conn.close()
 
 
 def insert_price_logs(tracker_id, price_result):
@@ -186,7 +216,11 @@ def trigger_summary_generation(tracker_id):
     api_base = os.environ.get("API_BASE_INTERNAL", "http://api:8080/api")
     url = f"{api_base}/trackers/{tracker_id}/summary"
     try:
-        req = urllib.request.Request(url, method="POST", headers={"Content-Type": "application/json"})
+        headers = {"Content-Type": "application/json"}
+        internal_key = os.environ.get("INTERNAL_API_KEY", "")
+        if internal_key:
+            headers["X-Internal-Key"] = internal_key
+        req = urllib.request.Request(url, method="POST", headers=headers)
         resp = urllib.request.urlopen(req, timeout=10)
         if resp.status == 200:
             logger.info("Summary generated for tracker %s", tracker_id)
@@ -229,12 +263,17 @@ def run():
         tracker_id, keyword = picked
         logger.info("PROCESSING tracker keyword=%s", keyword)
 
+        # Mark start
+        update_processing_step(tracker_id, 'AMAZON_1')
+
         price_result = None
         last_error = None
         source_used = "None"
 
         # --- PHASE 1: AMAZON (Max 2 Attempts) ---
         for attempt in range(1, MAX_AMAZON_RETRIES + 1):
+            if attempt == 2:
+                update_processing_step(tracker_id, 'AMAZON_2')
             try:
                 logger.info(
                     f"[AMAZON] Attempt {attempt}/{MAX_AMAZON_RETRIES} for {keyword}..."
@@ -261,6 +300,7 @@ def run():
             logger.warning(
                 f"Amazon failed after {MAX_AMAZON_RETRIES} attempts. Switching to eBay fallback..."
             )
+            update_processing_step(tracker_id, 'EBAY')
             try:
                 # Coba eBay sekali saja (atau bisa diloop juga kalau mau)
                 price_result = asyncio.run(scrape_ebay(keyword))
@@ -284,6 +324,7 @@ def run():
 
         # --- SUCCESS SAVE ---
         try:
+            update_processing_step(tracker_id, 'SAVING')
             logger.info(
                 "Saving price data (Source: %s) | Market: $%s | Count: %s",
                 source_used,
@@ -298,10 +339,12 @@ def run():
             # news_result = asyncio.run(scrape_news(keyword))
             # insert_news_logs(tracker_id, news_result)
 
+            increment_rescrape_count(tracker_id)
             mark_ready(tracker_id)
             logger.info("Tracker %s marked READY.", keyword)
 
             # Generate summary after successful scrape (non-blocking, non-critical)
+            update_processing_step(tracker_id, 'SUMMARY')
             trigger_summary_generation(tracker_id)
 
         except Exception as e:

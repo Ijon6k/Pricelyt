@@ -31,6 +31,7 @@ UPDATE trackers
 SET status = 'READY',
     last_scraped_at = NOW(),
     processing_started_at = NULL,
+    processing_step = NULL,
     error_count = 0,
     last_error_code = NULL,
     last_error_message = NULL,
@@ -63,10 +64,23 @@ INSERT INTO price_logs (
 VALUES (%s, %s, %s, %s, %s, %s, %s, NOW());
 """
 
+SQL_UPDATE_PROCESSING_STEP = """
+UPDATE trackers
+SET processing_step = %s
+WHERE id = %s;
+"""
+
+SQL_INCREMENT_RESCrape_COUNT = """
+UPDATE trackers
+SET rescrape_count = rescrape_count + 1
+WHERE id = %s;
+"""
+
 SQL_REAPER_PROCESSING_TIMEOUT = """
 UPDATE trackers
 SET status = 'PENDING',
-    processing_started_at = NULL
+    processing_started_at = NULL,
+    processing_step = NULL
 WHERE status = 'PROCESSING'
     AND processing_started_at < NOW() - INTERVAL '30 minutes';
 """

@@ -54,8 +54,8 @@ func NewRouter(db *sqlx.DB) http.Handler {
 	apiMux.HandleFunc("GET /profile/stats", mw.AuthRequired(handler.GetProfileStats))
 	apiMux.HandleFunc("GET /profile/trackers", mw.AuthRequired(handler.GetUserTrackers))
 
-	// summary (authenticated — regenerate on demand)
-	apiMux.HandleFunc("POST /trackers/{id}/summary", mw.AuthRequired(handler.GenerateSummary))
+	// summary (authenticated user OR internal worker)
+	apiMux.HandleFunc("POST /trackers/{id}/summary", mw.InternalOrAuth(handler.GenerateSummary))
 
 	// watchlist (authenticated)
 	wlRepo := tracker.NewWatchlistRepository(db)

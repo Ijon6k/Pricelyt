@@ -97,10 +97,20 @@ func (h *Handler) DeleteTracker(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err := h.service.DeleteTracker(r.Context(), id)
+	userID := contextkeys.GetUserID(r.Context())
+	if userID == "" {
+		http.Error(w, `{"error":"unauthorized"}`, http.StatusUnauthorized)
+		return
+	}
+
+	err := h.service.DeleteTracker(r.Context(), id, userID)
 	if err != nil {
 		if err.Error() == "tracker not found" {
 			http.Error(w, `{"error":"tracker not found"}`, http.StatusNotFound)
+			return
+		}
+		if err.Error() == "forbidden" {
+			http.Error(w, `{"error":"forbidden"}`, http.StatusForbidden)
 			return
 		}
 		http.Error(w, `{"error":"internal server error"}`, http.StatusInternalServerError)
@@ -121,15 +131,25 @@ func (h *Handler) UpdateScrapeInterval(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	userID := contextkeys.GetUserID(r.Context())
+	if userID == "" {
+		http.Error(w, `{"error":"unauthorized"}`, http.StatusUnauthorized)
+		return
+	}
+
 	var req UpdateIntervalRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		http.Error(w, `{"error":"invalid request body"}`, http.StatusBadRequest)
 		return
 	}
 
-	if err := h.service.UpdateScrapeInterval(r.Context(), id, req.ScrapeIntervalMinutes); err != nil {
+	if err := h.service.UpdateScrapeInterval(r.Context(), id, userID, req.ScrapeIntervalMinutes); err != nil {
 		if err.Error() == "tracker not found" {
 			http.Error(w, `{"error":"tracker not found"}`, http.StatusNotFound)
+			return
+		}
+		if err.Error() == "forbidden" {
+			http.Error(w, `{"error":"forbidden"}`, http.StatusForbidden)
 			return
 		}
 		http.Error(w, `{"error":"`+err.Error()+`"}`, http.StatusBadRequest)
@@ -270,9 +290,16 @@ func (h *Handler) GetUserTrackers(w http.ResponseWriter, r *http.Request) {
 // --- Queue status ---
 
 type QueueStatus struct {
-	PendingCount    int            `json:"pending_count"`
-	ProcessingCount int            `json:"processing_count"`
-	Positions       map[string]int `json:"positions"` // tracker_id -> position (1-indexed)
+	PendingCount    int               `json:"pending_count"`
+	ProcessingCount int               `json:"processing_count"`
+	Positions       map[string]int    `json:"positions"`       // tracker_id -> position (1-indexed)
+	Processing      []QueueTracker    `json:"processing,omitempty"` // currently processing trackers
+}
+
+type QueueTracker struct {
+	ID             string  `json:"id"`
+	Keyword        string  `json:"keyword"`
+	ProcessingStep *string `json:"processing_step"`
 }
 
 func (h *Handler) GetQueueStatus(w http.ResponseWriter, r *http.Request) {
@@ -296,10 +323,21 @@ func (h *Handler) GetQueueStatus(w http.ResponseWriter, r *http.Request) {
 		positions[id] = i + 1 // 1-indexed
 	}
 
+	// Fetch processing trackers with keyword + step
+	var processingTrackers []QueueTracker
+	if len(processing) > 0 {
+		query = `SELECT id, keyword, processing_step FROM trackers WHERE status = 'PROCESSING' ORDER BY processing_started_at ASC`
+		if err := h.service.repo.db.Select(&processingTrackers, query); err != nil {
+			http.Error(w, `{"error":"failed"}`, http.StatusInternalServerError)
+			return
+		}
+	}
+
 	status := QueueStatus{
 		PendingCount:    len(pending),
 		ProcessingCount: len(processing),
 		Positions:       positions,
+		Processing:      processingTrackers,
 	}
 
 	w.Header().Set("Content-Type", "application/json")
@@ -315,9 +353,15 @@ func (h *Handler) GenerateSummary(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if err := h.service.GenerateSummary(r.Context(), id); err != nil {
+	userID := contextkeys.GetUserID(r.Context())
+
+	if err := h.service.GenerateSummary(r.Context(), id, userID); err != nil {
 		if err.Error() == "tracker not found" {
 			http.Error(w, `{"error":"tracker not found"}`, http.StatusNotFound)
+			return
+		}
+		if err.Error() == "forbidden" {
+			http.Error(w, `{"error":"forbidden"}`, http.StatusForbidden)
 			return
 		}
 		if strings.Contains(err.Error(), "insufficient data") {
