@@ -3,6 +3,7 @@ package tracker
 import (
 	"encoding/json"
 	"net/http"
+	"strings"
 
 	"api/internal/contextkeys"
 )
@@ -278,6 +279,10 @@ func (h *Handler) GenerateSummary(w http.ResponseWriter, r *http.Request) {
 	if err := h.service.GenerateSummary(r.Context(), id); err != nil {
 		if err.Error() == "tracker not found" {
 			http.Error(w, `{"error":"tracker not found"}`, http.StatusNotFound)
+			return
+		}
+		if strings.Contains(err.Error(), "insufficient data") {
+			http.Error(w, `{"error":"`+err.Error()+`"}`, http.StatusBadRequest)
 			return
 		}
 		http.Error(w, `{"error":"failed to generate summary"}`, http.StatusInternalServerError)

@@ -60,7 +60,7 @@ function SearchContent() {
           {/* TITLE */}
           <div className="mb-8">
             {query ? (
-              <h1 className="text-2xl font-normal editorial-headline tracking-tight">
+              <h1 className="text-2xl font-semibold tracking-tight">
                 Results for{" "}
                 <span className="text-[rgb(var(--accent))]">
                   &ldquo;{query}&rdquo;

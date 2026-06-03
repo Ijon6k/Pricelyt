@@ -8,6 +8,7 @@ import { useAuth } from "../lib/AuthContext";
 
 export default function RegisterPage() {
   const [email, setEmail] = useState("");
+  const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
@@ -20,7 +21,7 @@ export default function RegisterPage() {
     setLoading(true);
 
     try {
-      const data = await registerUser(email, password);
+      const data = await registerUser(email, password, username || undefined);
       login(data.token, data.user);
       router.push("/");
     } catch (err) {
@@ -35,7 +36,7 @@ export default function RegisterPage() {
       <div className="w-full max-w-sm">
         <div className="text-center mb-10">
           <p className="editorial-label mb-3">Getting started</p>
-          <h1 className="text-3xl font-normal editorial-headline tracking-tight mb-2">
+          <h1 className="text-3xl font-semibold tracking-tight mb-2">
             Create account
           </h1>
           <p className="text-sm text-[rgb(var(--muted))]">
@@ -44,6 +45,26 @@ export default function RegisterPage() {
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-5">
+          <div>
+            <label htmlFor="username" className="editorial-label block mb-2">
+              Username
+            </label>
+            <input
+              id="username"
+              type="text"
+              value={username}
+              onChange={(e) => setUsername(e.target.value)}
+              autoComplete="username"
+              minLength={3}
+              maxLength={32}
+              className="w-full px-3.5 py-2.5 rounded-lg border border-[rgb(var(--border))] bg-[rgb(var(--card))] text-[rgb(var(--fg))] text-sm focus:outline-none focus:border-[rgb(var(--accent))] focus:ring-1 focus:ring-[rgb(var(--accent))] placeholder:text-[rgb(var(--muted-lighter))]"
+              placeholder="Choose a display name"
+            />
+            <p className="text-xs text-[rgb(var(--muted-lighter))] mt-1.5">
+              Optional. 3-32 characters.
+            </p>
+          </div>
+
           <div>
             <label htmlFor="email" className="editorial-label block mb-2">
               Email

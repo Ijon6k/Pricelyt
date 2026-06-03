@@ -35,7 +35,7 @@ export default function LoginPage() {
       <div className="w-full max-w-sm">
         <div className="text-center mb-10">
           <p className="editorial-label mb-3">Account</p>
-          <h1 className="text-3xl font-normal editorial-headline tracking-tight mb-2">
+          <h1 className="text-3xl font-semibold tracking-tight mb-2">
             Welcome back
           </h1>
           <p className="text-sm text-[rgb(var(--muted))]">

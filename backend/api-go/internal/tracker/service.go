@@ -158,6 +158,7 @@ func (s *Service) GetSharedTracker(token string) (*TrackerDetail, error) {
 
 // GenerateSummary creates a natural language summary from price data + news.
 // Template-based — no LLM API needed. Stored in DB, served to all users.
+// Requires at least 3 data points to generate a meaningful summary.
 func (s *Service) GenerateSummary(ctx context.Context, trackerID string) error {
 	t, err := s.repo.FindByID(trackerID)
 	if err != nil {
@@ -167,17 +168,69 @@ func (s *Service) GenerateSummary(ctx context.Context, trackerID string) error {
 	prices, _ := s.repo.FindPriceLogs(trackerID)
 	news, _ := s.repo.FindNewsLogs(trackerID)
 
+	// Validation: require at least 3 price data points for a useful summary
+	if len(prices) < 3 {
+		return fmt.Errorf("insufficient data: need at least 3 price data points, got %d", len(prices))
+	}
+
 	summary := buildSummary(t.Keyword, prices, news)
 
 	return s.repo.UpdateSummary(ctx, trackerID, summary)
 }
 
 // buildSummary constructs a human-readable summary from price + news data.
+// Output structure:
+//   - Line 1: **Keyword** — Market Intelligence Summary (header)
+//   - Line 2: Bold one-liner insight (displayed as headline on frontend)
+//   - Line 3: --- (separator)
+//   - Rest: Detailed sections (collapsible on frontend)
 func buildSummary(keyword string, prices []PriceLog, news []NewsLog) string {
 	var b strings.Builder
 
 	// Header
 	b.WriteString(fmt.Sprintf("**%s** — Market Intelligence Summary\n\n", strings.Title(strings.ToLower(keyword))))
+
+	// --- ONE-LINER HEADLINE ---
+	// This line is extracted by the frontend as the prominent insight
+	latest := prices[len(prices)-1]
+	earliest := prices[0]
+	allPrices := make([]float64, len(prices))
+	for i, p := range prices {
+		allPrices[i] = p.MarketPrice
+	}
+	avg := mean(allPrices)
+	minP := min(allPrices)
+	maxP := max(allPrices)
+	changeFromFirst := (latest.MarketPrice - earliest.MarketPrice) / earliest.MarketPrice * 100
+
+	if len(prices) >= 3 {
+		slope := linearSlope(allPrices)
+		deviation := (latest.MarketPrice - avg) / avg * 100
+
+		// Build a concise one-liner
+		var trend, deal string
+		if slope > 0.5 {
+			trend = fmt.Sprintf("trending up +%.1f%%", changeFromFirst)
+		} else if slope < -0.5 {
+			trend = fmt.Sprintf("trending down %.1f%%", changeFromFirst)
+		} else {
+			trend = "stable pricing"
+		}
+
+		if deviation < -5 {
+			deal = fmt.Sprintf("%.0f%% below average — good deal", math.Abs(deviation))
+		} else if deviation > 5 {
+			deal = fmt.Sprintf("%.0f%% above average", deviation)
+		} else {
+			deal = "near average"
+		}
+
+		b.WriteString(fmt.Sprintf("**$%.2f** · %s · %s\n", latest.MarketPrice, trend, deal))
+	} else {
+		b.WriteString(fmt.Sprintf("**$%.2f** · %d data points collected\n", latest.MarketPrice, len(prices)))
+	}
+
+	b.WriteString("\n---\n\n")
 
 	if len(prices) == 0 {
 		b.WriteString("No price data available yet. The tracker is waiting for its first scrape cycle.\n")
@@ -190,16 +243,6 @@ func buildSummary(keyword string, prices []PriceLog, news []NewsLog) string {
 	// --- Price Analysis ---
 	b.WriteString("## Price Analysis\n\n")
 
-	latest := prices[len(prices)-1]
-	earliest := prices[0]
-	allPrices := make([]float64, len(prices))
-	for i, p := range prices {
-		allPrices[i] = p.MarketPrice
-	}
-
-	avg := mean(allPrices)
-	minP := min(allPrices)
-	maxP := max(allPrices)
 	volatility := stddev(allPrices) / avg * 100
 
 	// Current price

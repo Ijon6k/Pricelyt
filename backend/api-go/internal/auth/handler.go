@@ -27,6 +27,7 @@ func (h *Handler) Register(w http.ResponseWriter, r *http.Request) {
 
 	req.Email = strings.TrimSpace(strings.ToLower(req.Email))
 	req.Password = strings.TrimSpace(req.Password)
+	req.Username = strings.TrimSpace(req.Username)
 
 	if req.Email == "" || req.Password == "" {
 		http.Error(w, `{"error":"email and password are required"}`, http.StatusBadRequest)
@@ -44,11 +45,21 @@ func (h *Handler) Register(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, `{"error":"invalid email format"}`, http.StatusBadRequest)
 		return
 	}
+	if req.Username != "" {
+		if len(req.Username) < 3 {
+			http.Error(w, `{"error":"username must be at least 3 characters"}`, http.StatusBadRequest)
+			return
+		}
+		if len(req.Username) > 32 {
+			http.Error(w, `{"error":"username must not exceed 32 characters"}`, http.StatusBadRequest)
+			return
+		}
+	}
 
-	user, err := h.repo.CreateUser(r.Context(), req.Email, req.Password)
+	user, err := h.repo.CreateUser(r.Context(), req.Email, req.Password, req.Username)
 	if err != nil {
-		if err.Error() == "email already registered" {
-			http.Error(w, `{"error":"email already registered"}`, http.StatusConflict)
+		if err.Error() == "email already registered" || err.Error() == "username already taken" {
+			http.Error(w, `{"error":"`+err.Error()+`"}`, http.StatusConflict)
 			return
 		}
 		http.Error(w, `{"error":"internal server error"}`, http.StatusInternalServerError)
@@ -125,7 +136,38 @@ func (h *Handler) GetProfile(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(map[string]interface{}{
 		"id":         user.ID,
 		"email":      user.Email,
+		"username":   user.Username,
 		"created_at": user.CreatedAt,
+	})
+}
+
+// UpdateProfile updates the authenticated user's profile (username).
+func (h *Handler) UpdateProfile(w http.ResponseWriter, r *http.Request) {
+	userID := contextkeys.GetUserID(r.Context())
+	if userID == "" {
+		http.Error(w, `{"error":"unauthorized"}`, http.StatusUnauthorized)
+		return
+	}
+
+	var req UpdateProfileRequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		http.Error(w, `{"error":"invalid request body"}`, http.StatusBadRequest)
+		return
+	}
+
+	if err := h.repo.UpdateUsername(r.Context(), userID, req.Username); err != nil {
+		if err.Error() == "username already taken" {
+			http.Error(w, `{"error":"username already taken"}`, http.StatusConflict)
+			return
+		}
+		http.Error(w, `{"error":"`+err.Error()+`"}`, http.StatusBadRequest)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(map[string]interface{}{
+		"success":  true,
+		"username": req.Username,
 	})
 }
 

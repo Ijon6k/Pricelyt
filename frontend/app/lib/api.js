@@ -57,11 +57,13 @@ export async function addTracker(keyword, token) {
   return res.json();
 }
 
-export async function registerUser(email, password) {
+export async function registerUser(email, password, username) {
+  const body = { email, password };
+  if (username) body.username = username;
   const res = await fetch(`${getBaseUrl()}/auth/register`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ email, password }),
+    body: JSON.stringify(body),
   });
   if (!res.ok) {
     const err = await res.json().catch(() => ({ error: "Registration failed" }));
@@ -91,6 +93,22 @@ export async function fetchProfile(token) {
     cache: "no-store",
   });
   if (!res.ok) throw new Error("Failed to fetch profile");
+  return res.json();
+}
+
+export async function updateProfile(token, username) {
+  const res = await fetch(`${getBaseUrl()}/profile`, {
+    method: "PUT",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify({ username }),
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({ error: "Failed to update profile" }));
+    throw new Error(err.error || "Failed to update profile");
+  }
   return res.json();
 }
 

@@ -2,7 +2,7 @@
 
 /*
  * Pricelyt — clean, modern design system.
- * Inter everywhere. Teal accent. Spacious and calm.
+ * Inter everywhere. Blue accent. Spacious and calm.
  */
 
 @custom-variant dark (&[data-theme="dark"]);
@@ -15,9 +15,9 @@
   --card: 255 255 255;
   --card-hover: 249 250 251;
   --border: 209 213 219;
-  --accent: 13 148 136;
-  --accent-soft: 13 148 136 / 0.08;
-  --accent-subtle: 240 253 250;
+  --accent: 37 99 235;
+  --accent-soft: 37 99 235 / 0.08;
+  --accent-subtle: 239 246 255;
   --amber: 217 119 6;
   --amber-soft: 217 119 6 / 0.1;
   --success: 22 163 74;
@@ -34,9 +34,9 @@
   --card: 22 22 25;
   --card-hover: 26 26 29;
   --border: 42 42 47;
-  --accent: 45 212 191;
-  --accent-soft: 45 212 191 / 0.12;
-  --accent-subtle: 5 25 24;
+  --accent: 96 165 250;
+  --accent-soft: 96 165 250 / 0.12;
+  --accent-subtle: 15 23 42;
   --amber: 251 191 36;
   --amber-soft: 251 191 36 / 0.12;
   --success: 34 197 94;
@@ -102,6 +102,24 @@ h1, h2, h3, h4 {
   background: rgb(var(--border));
 }
 
+.ornament-divider {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  color: rgb(var(--muted));
+  font-size: 0.75rem;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+.ornament-divider::before,
+.ornament-divider::after {
+  content: "";
+  flex: 1;
+  height: 1px;
+  background: rgb(var(--border));
+}
+
 .ornament-bar {
   width: 3px;
   height: 1.25rem;
@@ -128,4 +146,17 @@ h1, h2, h3, h4 {
 [data-theme="dark"] .section-tint {
   background: rgb(var(--accent-soft));
   opacity: 0.5;
+}
+
+/* ─── AI Summary styles ─── */
+.summary-headline {
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: rgb(var(--fg));
+  line-height: 1.5;
+  letter-spacing: -0.01em;
+}
+.summary-headline strong {
+  font-family: var(--font-mono);
+  font-weight: 600;
 }

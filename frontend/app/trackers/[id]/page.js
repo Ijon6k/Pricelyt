@@ -38,7 +38,7 @@ const formatDate = (dateStr) =>
 function StatusBadge({ status }) {
   const styles = {
     READY: "bg-[rgb(var(--success))]",
-    PROCESSING: "bg-blue-500",
+    PROCESSING: "bg-[rgb(var(--accent))]",
     PENDING: "bg-[rgb(var(--amber))]",
     ERROR: "bg-[rgb(var(--danger))]",
   };
@@ -104,8 +104,8 @@ export default async function TrackerDetailPage({ params }) {
           </div>
         </div>
 
-        {/* HEADER — now 2-column on desktop */}
-        <div className="mb-10 pb-10 border-b border-[rgb(var(--border))]">
+        {/* HEADER — 2-column on desktop */}
+        <div className="mb-8 pb-8 border-b border-[rgb(var(--border))]">
           {/* Meta row */}
           <div className="flex items-center gap-5 mb-6">
             <StatusBadge status={tracker.status} />
@@ -202,6 +202,11 @@ export default async function TrackerDetailPage({ params }) {
           )}
         </div>
 
+        {/* AI SUMMARY — above the fold, prominent position */}
+        <div className="mb-8">
+          <AISummary tracker={tracker} />
+        </div>
+
         {/* ERROR BANNER */}
         {hasError && (
           <div className="mb-8 p-5 rounded-lg border border-[rgb(var(--danger))]/20 bg-[rgb(var(--danger))]/5 flex gap-3 items-start">
@@ -216,11 +221,6 @@ export default async function TrackerDetailPage({ params }) {
             </div>
           </div>
         )}
-
-        {/* AI SUMMARY */}
-        <div className="mb-8">
-          <AISummary tracker={tracker} />
-        </div>
 
         {/* DASHBOARD */}
         <TrackerDashboard tracker={tracker} />

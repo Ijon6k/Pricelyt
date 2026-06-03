@@ -4,13 +4,15 @@ import { useState, useMemo } from "react";
 import TrackerCard from "./TrackerCard";
 import TrackerRow from "./TrackerRow";
 import FilterBar from "./FilterBar";
-import { Loader2 } from "lucide-react";
+import { Loader2, Archive, AlertCircle } from "lucide-react";
 
-const IN_PROGRESS_STATUSES = ["PENDING", "PROCESSING", "ERROR"];
+const IN_PROGRESS_STATUSES = ["PENDING", "PROCESSING"];
 const TRACKED_STATUSES = ["READY"];
+const ARCHIVED_STATUSES = ["ERROR"];
 
 export default function TrackerList({ trackers: initialTrackers }) {
   const [sort, setSort] = useState("newest");
+  const [showArchived, setShowArchived] = useState(false);
 
   const sorted = useMemo(() => {
     const copy = [...initialTrackers];
@@ -20,12 +22,13 @@ export default function TrackerList({ trackers: initialTrackers }) {
       case "most_tracked":
         return copy.sort((a, b) => (b.view_count || 0) - (a.view_count || 0));
       default:
-        return copy; // "all" — keep original order
+        return copy;
     }
   }, [initialTrackers, sort]);
 
   const inProgress = sorted.filter((t) => IN_PROGRESS_STATUSES.includes(t.status));
   const tracked = sorted.filter((t) => TRACKED_STATUSES.includes(t.status));
+  const archived = sorted.filter((t) => ARCHIVED_STATUSES.includes(t.status));
 
   return (
     <>
@@ -57,7 +60,7 @@ export default function TrackerList({ trackers: initialTrackers }) {
       )}
 
       {/* TRACKED SECTION — editorial table/list hybrid */}
-      <section>
+      <section className="mb-14">
         <div className="flex items-baseline justify-between mb-6">
           <h2 className="editorial-label">Tracked</h2>
           <span className="editorial-label">
@@ -67,7 +70,6 @@ export default function TrackerList({ trackers: initialTrackers }) {
 
         {tracked.length > 0 ? (
           <div className="border-t border-[rgb(var(--border))]">
-            {/* Subtle column headers — hidden on small screens */}
             <div className="hidden md:flex items-center gap-4 md:gap-6 px-2 py-2 text-xs font-medium uppercase tracking-wider text-[rgb(var(--muted-lighter))]">
               <span className="w-[90px] shrink-0">Status</span>
               <span className="flex-1">Product</span>
@@ -76,7 +78,7 @@ export default function TrackerList({ trackers: initialTrackers }) {
               <span className="hidden lg:block w-[120px] shrink-0 text-right">Views · Created</span>
               <span className="w-4 shrink-0" />
             </div>
-            {tracked.map((tracker, i) => (
+            {tracked.map((tracker) => (
               <TrackerRow key={tracker.id} tracker={tracker} />
             ))}
           </div>
@@ -95,6 +97,59 @@ export default function TrackerList({ trackers: initialTrackers }) {
           </div>
         )}
       </section>
+
+      {/* ARCHIVE SECTION — ERROR trackers */}
+      {archived.length > 0 && (
+        <section>
+          <button
+            onClick={() => setShowArchived(!showArchived)}
+            className="flex items-center gap-2 mb-4 group"
+          >
+            <Archive size={14} className="text-[rgb(var(--muted))] group-hover:text-[rgb(var(--fg))] transition-colors" />
+            <h2 className="editorial-label group-hover:text-[rgb(var(--fg))] transition-colors">
+              Archive
+            </h2>
+            <span className="text-xs text-[rgb(var(--danger))] bg-[rgb(var(--danger))]/8 px-1.5 py-0.5 rounded-full font-medium">
+              {archived.length}
+            </span>
+            <ChevronIcon open={showArchived} />
+          </button>
+
+          {showArchived && (
+            <div className="border-t border-[rgb(var(--border))]">
+              <div className="hidden md:flex items-center gap-4 md:gap-6 px-2 py-2 text-xs font-medium uppercase tracking-wider text-[rgb(var(--muted-lighter))]">
+                <span className="w-[90px] shrink-0">Status</span>
+                <span className="flex-1">Product</span>
+                <span className="w-[80px] shrink-0 hidden md:block">Trend</span>
+                <span className="w-[130px] shrink-0 text-right">Price</span>
+                <span className="hidden lg:block w-[120px] shrink-0 text-right">Views · Created</span>
+                <span className="w-4 shrink-0" />
+              </div>
+              {archived.map((tracker) => (
+                <TrackerRow key={tracker.id} tracker={tracker} />
+              ))}
+            </div>
+          )}
+        </section>
+      )}
     </>
+  );
+}
+
+function ChevronIcon({ open }) {
+  return (
+    <svg
+      width="12"
+      height="12"
+      viewBox="0 0 12 12"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.5"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      className={`text-[rgb(var(--muted))] transition-transform duration-200 ${open ? "rotate-180" : ""}`}
+    >
+      <path d="M3 4.5L6 7.5L9 4.5" />
+    </svg>
   );
 }

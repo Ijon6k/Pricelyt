@@ -25,6 +25,7 @@ func NewRouter(db *sqlx.DB) http.Handler {
 
 	// profile (authenticated)
 	apiMux.HandleFunc("GET /profile", mw.AuthRequired(authHandler.GetProfile))
+	apiMux.HandleFunc("PUT /profile", mw.AuthRequired(authHandler.UpdateProfile))
 	apiMux.HandleFunc("PUT /profile/password", mw.AuthRequired(authHandler.ChangePassword))
 
 	// tracker

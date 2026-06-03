@@ -165,7 +165,24 @@ def trigger_summary_generation(tracker_id):
     
     The summary is template-based (no LLM), so this is fast and cheap.
     Runs after each successful scrape so the summary stays fresh.
+    Skips if the tracker doesn't have enough data yet (< 3 price points).
     """
+    # Check data count before calling API — avoid unnecessary requests
+    conn = get_conn()
+    try:
+        with conn.cursor() as cur:
+            cur.execute("SELECT COUNT(*) FROM price_logs WHERE tracker_id = %s", (tracker_id,))
+            row = cur.fetchone()
+            count = row[0] if row else 0
+            if count < 3:
+                logger.info("Skipping summary for tracker %s: only %d data points (need 3)", tracker_id, count)
+                return
+    except Exception as e:
+        logger.warning("Failed to check data count for summary: %s", e)
+        return
+    finally:
+        conn.close()
+
     api_base = os.environ.get("API_BASE_INTERNAL", "http://api:8080/api")
     url = f"{api_base}/trackers/{tracker_id}/summary"
     try:

@@ -15,6 +15,7 @@ export default function AuthNav() {
   if (!mounted) return null;
 
   if (user) {
+    const displayName = user.username || user.email?.split("@")[0] || "Account";
     return (
       <div className="flex items-center gap-3">
         <Link
@@ -22,7 +23,7 @@ export default function AuthNav() {
           className="flex items-center gap-1.5 text-xs text-[rgb(var(--muted))] hover:text-[rgb(var(--fg))] transition-colors no-underline"
         >
           <User size={14} />
-          <span className="truncate max-w-[120px]">{user.email}</span>
+          <span className="truncate max-w-[120px]">{displayName}</span>
         </Link>
         <button
           onClick={logout}
