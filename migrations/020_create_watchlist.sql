@@ -7,5 +7,5 @@ CREATE TABLE IF NOT EXISTS watchlists (
     UNIQUE(user_id, tracker_id)
 );
 
-CREATE INDEX idx_watchlists_user_id ON watchlists(user_id);
-CREATE INDEX idx_watchlists_tracker_id ON watchlists(tracker_id);
+CREATE INDEX IF NOT EXISTS idx_watchlists_user_id ON watchlists(user_id);
+CREATE INDEX IF NOT EXISTS idx_watchlists_tracker_id ON watchlists(tracker_id);

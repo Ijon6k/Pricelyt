@@ -257,13 +257,7 @@ export default function AISummary({ tracker }) {
             </div>
           )}
 
-          {/* Error message */}
-          {error && (
-            <div className="px-5 pb-3 flex items-center gap-2 text-xs text-[rgb(var(--danger))]">
-              <AlertTriangle size={12} />
-              {error}
-            </div>
-          )}
+          {/* Error message — suppressed in stateless mode */}
         </div>
       </div>
     </section>
