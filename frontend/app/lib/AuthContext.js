@@ -45,7 +45,7 @@ export function AuthProvider({ children }) {
     localStorage.removeItem("pricelyt_user");
     document.cookie = "token=; path=/; max-age=0";
     setState({ token: null, user: null });
-    router.push("/");
+    router.push("/login");
   }, [router]);
 
   const { token, user } = state;

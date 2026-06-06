@@ -69,7 +69,8 @@ func main() {
 	c := cors.New(cors.Options{
 		AllowedOrigins:   origins,
 		AllowedMethods:   []string{"GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"},
-		AllowedHeaders:   []string{"Origin", "Content-Type", "Authorization", "X-Admin-Key"},
+		AllowedHeaders:   []string{"Origin", "Content-Type", "Authorization", "X-Admin-Key", "X-Internal-Key"},
+		ExposedHeaders:   []string{"Retry-After"},
 		AllowCredentials: true,
 		MaxAge:           86400, // Cache preflight for 24h
 	})

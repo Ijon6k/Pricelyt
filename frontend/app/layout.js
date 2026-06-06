@@ -5,6 +5,7 @@ import ThemeToggle from "./components/ThemeToggle";
 import Logo from "./components/Logo";
 import AuthProvider from "./components/AuthProvider";
 import HeaderAuth from "./components/HeaderAuth";
+import PWARegister from "./components/PWARegister";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -21,9 +22,23 @@ const jetbrains = JetBrains_Mono({
 });
 
 export const metadata = {
-  title: "Pricelyt — Price intelligence",
+  title: "Pricelyt — Price Intelligence",
   description:
-    "Track any product's market price over time, with related news in one view.",
+    "Track market prices, analyze trends, know when to buy.",
+  manifest: "/manifest.json",
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "default",
+    title: "Pricelyt",
+  },
+  icons: {
+    icon: "/icons/icon-192.svg",
+    apple: "/icons/icon-512.svg",
+  },
+};
+
+export const viewport = {
+  themeColor: "#1F4D3A",
 };
 
 export default function RootLayout({ children }) {
@@ -34,33 +49,27 @@ export default function RootLayout({ children }) {
       className={`${inter.variable} ${jetbrains.variable}`}
     >
       <body className="min-h-screen flex flex-col">
+        <PWARegister />
         <AuthProvider>
-          <header className="fixed top-0 inset-x-0 z-50 border-b border-[rgb(var(--border))] bg-[rgb(var(--bg))]/90 backdrop-blur-sm">
-            <div className="max-w-screen-2xl mx-auto px-6 xl:px-10 h-16 flex items-center justify-between">
+          <header className="fixed top-0 inset-x-0 z-50 border-b border-[rgb(var(--border))] bg-[rgb(var(--bg))]">
+            <div className="max-w-screen-2xl mx-auto px-6 xl:px-10 h-14 flex items-center justify-between">
               <Link href="/" className="no-underline">
                 <Logo />
               </Link>
-              <div className="flex items-center gap-4">
+              <div className="flex items-center gap-3">
                 <HeaderAuth />
                 <ThemeToggle />
               </div>
             </div>
           </header>
 
-          <div className="pt-16 flex flex-col flex-grow">
+          <div className="pt-14 flex flex-col flex-grow">
             <div className="flex-grow">{children}</div>
 
-            <footer className="border-t border-[rgb(var(--border))] py-6 mt-16">
-              <div className="max-w-screen-2xl mx-auto px-6 xl:px-10 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-[rgb(var(--muted))]">
+            <footer className="border-t border-[rgb(var(--border))] py-4 mt-20">
+              <div className="max-w-screen-2xl mx-auto px-6 xl:px-10 flex flex-col sm:flex-row items-center justify-between gap-2 text-xs text-[rgb(var(--muted))]">
                 <span>&copy; {new Date().getFullYear()} Pricelyt</span>
-                <span className="flex items-center gap-2">
-                  <span>Built with</span>
-                  <a href="https://go.dev" target="_blank" rel="noopener noreferrer" className="text-[rgb(var(--accent))] hover:underline">Go</a>
-                  <span className="ornament-dot" />
-                  <a href="https://nextjs.org" target="_blank" rel="noopener noreferrer" className="text-[rgb(var(--accent))] hover:underline">Next.js</a>
-                  <span className="ornament-dot" />
-                  <a href="https://www.postgresql.org" target="_blank" rel="noopener noreferrer" className="text-[rgb(var(--accent))] hover:underline">PostgreSQL</a>
-                </span>
+                <span>Market intelligence, simplified.</span>
               </div>
             </footer>
           </div>

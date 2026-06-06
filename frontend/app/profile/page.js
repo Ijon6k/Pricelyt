@@ -57,6 +57,11 @@ export default function ProfilePage() {
         setStats(s);
         if (p.username) setUsernameValue(p.username);
       } catch (err) {
+        // If 401/auth error, clear stale token and redirect
+        if (err.message?.includes("401") || err.message?.includes("unauthorized") || err.message?.includes("Failed to fetch profile")) {
+          logout();
+          return;
+        }
         setError(err.message);
       } finally {
         setLoading(false);

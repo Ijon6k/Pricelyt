@@ -10,15 +10,15 @@ function TabButton({ active, onClick, label, count }) {
   return (
     <button
       onClick={onClick}
-      className={`relative shrink-0 px-4 py-2.5 text-sm font-medium transition-colors rounded-lg ${
+      className={`relative shrink-0 px-3.5 py-2 text-xs font-medium transition-colors rounded-md ${
         active
-          ? "text-[rgb(var(--fg))] bg-[rgb(var(--card))] shadow-sm"
-          : "text-[rgb(var(--muted))] hover:text-[rgb(var(--fg))]"
+          ? "text-[rgb(var(--fg))] bg-[rgb(var(--card))] border border-[rgb(var(--border))]"
+          : "text-[rgb(var(--muted))] hover:text-[rgb(var(--fg))] border border-transparent"
       }`}
     >
       {label}
       {count !== undefined && count > 0 && (
-        <span className="ml-1.5 text-[11px] text-[rgb(var(--muted-lighter))] tabular-nums">
+        <span className="ml-1.5 text-[10px] text-[rgb(var(--muted-lighter))] tabular-nums">
           ({count})
         </span>
       )}
@@ -56,7 +56,6 @@ export default function TabsAndWatchlist({ trackers }) {
     fetchWatchlist();
   }, [fetchWatchlist]);
 
-  // Refresh on tab switch to watchlist
   useEffect(() => {
     if (tab === "watchlist" && user) fetchWatchlist();
   }, [tab, user, fetchWatchlist]);
@@ -66,7 +65,7 @@ export default function TabsAndWatchlist({ trackers }) {
   return (
     <div>
       {/* Tabs */}
-      <div className="flex items-center gap-1 p-1 rounded-xl bg-[rgb(var(--border))]/30 w-full sm:w-fit mb-8 overflow-x-auto">
+      <div className="flex items-center gap-1 mb-8">
         <TabButton
           active={tab === "all"}
           onClick={() => setTab("all")}
@@ -83,49 +82,18 @@ export default function TabsAndWatchlist({ trackers }) {
 
       {tab === "watchlist" && !user && (
         <div className="py-16 text-center">
-          <div className="w-16 h-16 mx-auto mb-6 rounded-2xl bg-[rgb(var(--card))] flex items-center justify-center">
-            <svg
-              width="28"
-              height="28"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="rgb(var(--muted))"
-              strokeWidth="1.5"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            >
-              <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
-            </svg>
-          </div>
-          <h3 className="text-lg font-semibold text-[rgb(var(--fg))] mb-2">
-            Login required
-          </h3>
-          <p className="text-sm text-[rgb(var(--muted))] max-w-sm mx-auto leading-relaxed">
-            Sign in to create your personal watchlist. Tap the heart icon on any
-            product to save it here.
+          <p className="text-sm font-medium text-[rgb(var(--fg))] mb-1">Login required</p>
+          <p className="text-xs text-[rgb(var(--muted))]">
+            Sign in to create your personal watchlist.
           </p>
         </div>
       )}
 
       {tab === "watchlist" && user && !wlLoading && watchlist.length === 0 && (
         <div className="py-16 text-center">
-          <h3 className="text-lg font-semibold text-[rgb(var(--fg))] mb-2">
-            Your watchlist is empty
-          </h3>
-          <p className="text-sm text-[rgb(var(--muted))] max-w-sm mx-auto leading-relaxed">
-            Tap the{" "}
-            <svg
-              width="14"
-              height="14"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-              className="inline text-red-400"
-            >
-              <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
-            </svg>{" "}
-            icon on any product to add it here.
+          <p className="text-sm font-medium text-[rgb(var(--fg))] mb-1">Your watchlist is empty</p>
+          <p className="text-xs text-[rgb(var(--muted))]">
+            Tap the heart icon on any product to add it.
           </p>
         </div>
       )}

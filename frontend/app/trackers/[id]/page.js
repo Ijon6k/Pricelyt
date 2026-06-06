@@ -3,11 +3,12 @@ import { fetchTrackerDetail } from "@/app/lib/api";
 import TrackerDashboard from "@/app/components/TrackerDashboard";
 import DealScore from "@/app/components/DealScore";
 import SourceBadge from "@/app/components/SourceBadge";
-import { ArrowLeft, Eye, Calendar } from "lucide-react";
+import { ArrowLeft, Eye, Calendar, User } from "lucide-react";
 import AutoRefresh from "@/app/components/AutoRefresh";
 import DeleteTrackerButton from "@/app/components/DeleteTrackerButton";
 import ShareButton from "@/app/components/ShareButton";
 import AISummary from "@/app/components/AISummary";
+import LoveButton from "@/app/components/LoveButton";
 
 function Stat({ label, value }) {
   return (
@@ -99,6 +100,7 @@ export default async function TrackerDetailPage({ params }) {
             <ArrowLeft size={16} /> Back to overview
           </Link>
           <div className="flex items-center gap-3">
+            <LoveButton trackerId={tracker.id} size={20} className="flex-shrink-0" />
             <ShareButton trackerId={tracker.id} />
             <DeleteTrackerButton id={tracker.id} />
           </div>
@@ -123,6 +125,15 @@ export default async function TrackerDetailPage({ params }) {
                 </div>
                 <span className="ornament-dot" />
                 <span>{dataPoints} data points</span>
+                {tracker.user_name && (
+                  <>
+                    <span className="ornament-dot" />
+                    <div className="flex items-center gap-1.5">
+                      <User size={14} />
+                      <span>@{tracker.user_name}</span>
+                    </div>
+                  </>
+                )}
               </div>
             )}
           </div>

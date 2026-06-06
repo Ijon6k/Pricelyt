@@ -1,96 +1,90 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import {
   Loader2,
   Search,
   Clock,
   CheckCircle2,
-  ListOrdered,
   Zap,
   Globe,
   Save,
   Brain,
+  RotateCw,
+  Activity,
 } from "lucide-react";
 
-// Human-readable step config
+// ─── Step config ───
 const STEP_META = {
   AMAZON_1: {
     label: "Scanning Amazon",
     desc: "Checking Amazon listings…",
     icon: Search,
     color: "text-amber-500",
-    bg: "bg-amber-500/10",
+    dot: "bg-amber-500",
   },
   AMAZON_2: {
     label: "Retrying Amazon",
     desc: "Second attempt on Amazon…",
-    icon: Search,
+    icon: RotateCw,
     color: "text-orange-500",
-    bg: "bg-orange-500/10",
+    dot: "bg-orange-500",
   },
   EBAY: {
     label: "Scanning eBay",
     desc: "Checking eBay listings…",
     icon: Globe,
     color: "text-blue-500",
-    bg: "bg-blue-500/10",
+    dot: "bg-blue-500",
   },
   SAVING: {
-    label: "Saving",
+    label: "Saving data",
     desc: "Writing price data to database…",
     icon: Save,
     color: "text-emerald-500",
-    bg: "bg-emerald-500/10",
+    dot: "bg-emerald-500",
   },
   SUMMARY: {
     label: "Generating summary",
-    desc: "Building market analysis…",
+    desc: "Building market analysis with AI…",
     icon: Brain,
     color: "text-violet-500",
-    bg: "bg-violet-500/10",
+    dot: "bg-violet-500",
   },
 };
 
-function StepPill({ step }) {
-  const meta = STEP_META[step];
-  if (!meta) return null;
-  const Icon = meta.icon;
-  return (
-    <span
-      className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold uppercase tracking-wider ${meta.color} ${meta.bg}`}
-    >
-      <Icon size={10} />
-      {meta.label}
-    </span>
-  );
-}
+const PIPELINE_STEPS = ["AMAZON_1", "EBAY", "SAVING", "SUMMARY"];
 
-function StepProgress({ current }) {
-  const steps = ["AMAZON_1", "EBAY", "SAVING", "SUMMARY"];
-  const currentIdx = steps.findIndex((s) => {
+// ─── Pipeline dots (mini progress bar) ───
+
+function PipelineDots({ current }) {
+  const currentIdx = PIPELINE_STEPS.findIndex((s) => {
     if (s === "AMAZON_1" && (current === "AMAZON_1" || current === "AMAZON_2"))
       return true;
     return s === current;
   });
+
   return (
-    <div className="flex items-center gap-1 mt-2">
-      {steps.map((s, i) => {
+    <div className="flex items-center gap-0.5">
+      {PIPELINE_STEPS.map((s, i) => {
         const meta = STEP_META[s];
-        const active = i <= currentIdx;
+        const done = i < currentIdx;
+        const active = i === currentIdx;
         return (
-          <div key={s} className="flex items-center gap-1">
+          <div key={s} className="flex items-center">
             <div
-              className={`w-1.5 h-1.5 rounded-full transition-colors ${
-                active ? `bg-current ${meta.color}` : "bg-[rgb(var(--border))]"
+              className={`w-1 h-1 rounded-full transition-all duration-300 ${
+                done
+                  ? `${meta.dot} opacity-60`
+                  : active
+                    ? `${meta.dot} shadow-[0_0_4px] shadow-current ${meta.color}`
+                    : "bg-[rgb(var(--border))]"
               }`}
             />
-            {i < steps.length - 1 && (
+            {i < PIPELINE_STEPS.length - 1 && (
               <div
-                className={`w-4 h-px ${
-                  i < currentIdx
-                    ? "bg-[rgb(var(--muted))]"
-                    : "bg-[rgb(var(--border))]"
+                className={`w-2 h-px transition-colors ${
+                  i < currentIdx ? "bg-[rgb(var(--muted))]/40" : "bg-transparent"
                 }`}
               />
             )}
@@ -101,9 +95,72 @@ function StepProgress({ current }) {
   );
 }
 
+// ─── Processing item ───
+
+function ProcessingItem({ tracker }) {
+  const meta = STEP_META[tracker.processing_step] || STEP_META.AMAZON_1;
+  const Icon = meta.icon;
+  const isRescrape = (tracker.rescrape_count || 0) > 0;
+
+  return (
+    <div className="flex items-center gap-3 px-4 py-2.5">
+      <div className="relative shrink-0">
+        <div
+          className={`w-5 h-5 rounded-full flex items-center justify-center ${meta.color}`}
+        >
+          <Icon size={11} className="motion-safe:animate-pulse" />
+        </div>
+      </div>
+
+      <div className="flex-1 min-w-0">
+        <div className="flex items-center gap-2">
+          <span className="text-xs font-medium text-[rgb(var(--fg))] truncate max-w-[180px]">
+            {tracker.keyword}
+          </span>
+          {isRescrape && (
+            <span className="inline-flex items-center gap-0.5 px-1.5 py-px rounded text-[9px] font-semibold uppercase tracking-wider bg-amber-500/8 text-amber-600 dark:text-amber-400">
+              <RotateCw size={8} />
+              re-scrape #{tracker.rescrape_count}
+            </span>
+          )}
+        </div>
+        <div className="flex items-center gap-2 mt-1">
+          <span className={`text-[10px] font-medium ${meta.color}`}>
+            {meta.label}
+          </span>
+          <PipelineDots current={tracker.processing_step} />
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ─── Queue item (pending tracker with position) ───
+
+function QueueItem({ tracker, position, total }) {
+  return (
+    <div className="flex items-center gap-2 px-4 py-1.5">
+      <div className="flex items-center justify-center w-5 h-5 rounded bg-[rgb(var(--border))]/60 shrink-0">
+        <span className="text-[9px] font-bold tabular-nums text-[rgb(var(--muted))]">
+          {position}
+        </span>
+      </div>
+      <span className="text-xs text-[rgb(var(--muted))] truncate flex-1">
+        {tracker.keyword}
+      </span>
+      <span className="text-[9px] text-[rgb(var(--muted-lighter))] tabular-nums shrink-0">
+        {position}/{total}
+      </span>
+    </div>
+  );
+}
+
+// ─── Main component ───
+
 export default function VerboseTracker({ trackers }) {
   const [queue, setQueue] = useState(null);
   const [loading, setLoading] = useState(true);
+  const prevBusyRef = useRef(false);
 
   const fetchQueue = useCallback(async () => {
     try {
@@ -118,113 +175,102 @@ export default function VerboseTracker({ trackers }) {
 
   useEffect(() => {
     fetchQueue();
-    const interval = setInterval(fetchQueue, 5_000);
+    const interval = setInterval(fetchQueue, 4_000);
     return () => clearInterval(interval);
   }, [fetchQueue]);
 
-  if (loading) return null;
-
+  // Track when system goes from busy to idle (for "just finished" flash)
+  const [justFinished, setJustFinished] = useState(false);
   const busy =
     (queue?.processing_count || 0) > 0 || (queue?.pending_count || 0) > 0;
-  if (!busy) return null;
 
-  // Get trackers from list that have pending status
-  const pending = (trackers || []).filter((t) => t.status === "PENDING");
+  useEffect(() => {
+    if (prevBusyRef.current && !busy) {
+      setJustFinished(true);
+      const t = setTimeout(() => setJustFinished(false), 8000);
+      return () => clearTimeout(t);
+    }
+    prevBusyRef.current = busy;
+  }, [busy]);
+
+  // Don't render anything if idle and no flash
+  if (!busy && !justFinished) return null;
+
+  // Get pending trackers with queue positions
+  const pending = (trackers || [])
+    .filter((t) => t.status === "PENDING")
+    .sort((a, b) => new Date(a.created_at) - new Date(b.created_at));
 
   return (
-    <div className="mb-6 rounded-xl border border-[rgb(var(--border))]/60 bg-[rgb(var(--card))]/40 backdrop-blur-sm overflow-hidden">
-      {/* Compact header */}
-      <div className="flex items-center gap-2.5 px-4 py-2.5 border-b border-[rgb(var(--border))]/40">
-        <Loader2
-          size={13}
-          className="text-[rgb(var(--accent))] motion-safe:animate-spin shrink-0"
-        />
-        <span className="text-[11px] font-semibold tracking-widest uppercase text-[rgb(var(--muted))]">
-          System Activity
+    <div className="mb-8 rounded-lg border border-[rgb(var(--border))]/40 bg-[rgb(var(--card))]/30 backdrop-blur-sm overflow-hidden">
+      {/* Header */}
+      <div className="flex items-center gap-2 px-4 py-2 border-b border-[rgb(var(--border))]/30">
+        {busy ? (
+          <Activity
+            size={12}
+            className="text-[rgb(var(--accent))] motion-safe:animate-pulse shrink-0"
+          />
+        ) : (
+          <CheckCircle2 size={12} className="text-emerald-500/80 shrink-0" />
+        )}
+        <span className="text-[10px] font-semibold tracking-widest uppercase text-[rgb(var(--muted))]">
+          {busy ? "Processing" : "System idle"}
         </span>
-        <span className="ml-auto text-[10px] text-[rgb(var(--muted-lighter))] tabular-nums flex items-center gap-1">
-          <Zap size={10} />
-          {queue?.processing_count || 0} active · {queue?.pending_count || 0}{" "}
-          queued
-        </span>
+
+        <div className="ml-auto flex items-center gap-2">
+          {(queue?.processing_count || 0) > 0 && (
+            <span className="inline-flex items-center gap-1 px-1.5 py-px rounded bg-[rgb(var(--accent))]/8 text-[9px] font-semibold text-[rgb(var(--accent))] tabular-nums">
+              <Zap size={8} />
+              {queue.processing_count} active
+            </span>
+          )}
+          {(queue?.pending_count || 0) > 0 && (
+            <span className="inline-flex items-center gap-1 px-1.5 py-px rounded bg-amber-500/8 text-[9px] font-semibold text-amber-600 dark:text-amber-400 tabular-nums">
+              <Clock size={8} />
+              {queue.pending_count} queued
+            </span>
+          )}
+        </div>
       </div>
 
-      {/* Currently processing */}
+      {/* Processing trackers */}
       {queue?.processing &&
-        queue.processing.map((t) => {
-          const meta = STEP_META[t.processing_step] || STEP_META.AMAZON_1;
-          return (
-            <div
-              key={t.id}
-              className="flex items-start gap-3 px-4 py-3 border-b border-[rgb(var(--border))]/20 last:border-0"
-            >
-              <div className="relative shrink-0 mt-0.5">
-                <div
-                  className={`w-6 h-6 rounded-full ${meta.bg} flex items-center justify-center`}
-                >
-                  <div className="w-2 h-2 rounded-full bg-current animate-pulse" />
-                </div>
-              </div>
-              <div className="flex-1 min-w-0">
-                <div className="flex items-center gap-2 flex-wrap">
-                  <span className="text-xs font-medium text-[rgb(var(--fg))] truncate max-w-[160px] sm:max-w-[240px]">
-                    {t.keyword}
-                  </span>
-                  <StepPill step={t.processing_step} />
-                </div>
-                <p className="text-[11px] text-[rgb(var(--muted-lighter))] mt-1">
-                  {meta.desc}
-                </p>
-                <StepProgress current={t.processing_step} />
-              </div>
-            </div>
-          );
-        })}
+        queue.processing.map((t) => (
+          <ProcessingItem key={t.id} tracker={t} />
+        ))}
 
-      {/* Queue — pending trackers with position numbers */}
-      {queue?.pending_count > 0 && pending.length > 0 && (
-        <div className="px-4 py-2.5 bg-[rgb(var(--border))]/10">
-          <div className="flex items-center gap-2 mb-1.5">
-            <Clock size={12} className="text-[rgb(var(--amber))] shrink-0" />
-            <span className="text-[11px] font-medium text-[rgb(var(--muted))]">
-              Queue ({queue.pending_count})
+      {/* Queue list with position numbers */}
+      {pending.length > 0 && (
+        <div className="border-t border-[rgb(var(--border))]/20">
+          <div className="px-4 py-1.5 bg-[rgb(var(--border))]/5">
+            <span className="text-[9px] font-medium text-[rgb(var(--muted-lighter))] uppercase tracking-wider">
+              Queue · {pending.length} waiting
             </span>
           </div>
-          <div className="flex flex-wrap gap-x-3 gap-y-1">
-            {pending.slice(0, 5).map((t) => {
-              const pos = queue.positions?.[t.id];
-              return (
-                <span
-                  key={t.id}
-                  className="inline-flex items-center gap-1 text-[10px] text-[rgb(var(--muted-lighter))] tabular-nums"
-                >
-                  <span className="inline-flex items-center justify-center w-4 h-4 rounded-full bg-[rgb(var(--accent))]/10 text-[rgb(var(--accent))] text-[9px] font-bold">
-                    {pos ?? "–"}
-                  </span>
-                  <span className="truncate max-w-[100px]">
-                    {t.keyword}
-                  </span>
-                </span>
-              );
-            })}
-            {pending.length > 5 && (
+          {pending.slice(0, 8).map((t, i) => (
+            <QueueItem
+              key={t.id}
+              tracker={t}
+              position={i + 1}
+              total={pending.length}
+            />
+          ))}
+          {pending.length > 8 && (
+            <div className="px-4 py-1.5">
               <span className="text-[10px] text-[rgb(var(--muted-lighter))]">
-                +{pending.length - 5} more
+                +{pending.length - 8} more in queue
               </span>
-            )}
-          </div>
+            </div>
+          )}
         </div>
       )}
 
-      {/* Idle indicator when busy count is 0 but queue is somehow active */}
-      {!queue?.processing_count && queue?.pending_count === 0 && (
-        <div className="flex items-center gap-2 px-4 py-3">
-          <CheckCircle2
-            size={13}
-            className="text-emerald-500/70 shrink-0"
-          />
-          <span className="text-[11px] text-[rgb(var(--muted-lighter))]">
-            All caught up — waiting for next scrape cycle.
+      {/* Just-finished flash */}
+      {justFinished && !busy && (
+        <div className="flex items-center gap-2 px-4 py-2 border-t border-[rgb(var(--border))]/20">
+          <CheckCircle2 size={12} className="text-emerald-500 shrink-0" />
+          <span className="text-[11px] text-[rgb(var(--muted))]">
+            All done — waiting for next scrape cycle.
           </span>
         </div>
       )}

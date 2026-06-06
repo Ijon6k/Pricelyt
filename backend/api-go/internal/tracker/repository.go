@@ -23,7 +23,7 @@ const trackerSelectCols = `
 	t.error_count, t.last_error_code, t.last_error_message, t.last_error_at,
 	t.scrape_interval_minutes, t.last_scraped_at,
 	t.processing_started_at, t.processing_step, t.rescrape_count,
-	t.user_id, COALESCE(u.email, '') as user_name,
+	t.user_id, COALESCE(u.username, '') as user_name,
 	t.summary, t.summary_generated_at,
 	latest_prices.market_price AS latest_price,
 	latest_prices.source AS latest_price_source,

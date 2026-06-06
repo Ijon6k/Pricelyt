@@ -172,10 +172,20 @@ func (h *Handler) CreateShareLink(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	token, err := h.service.CreateShareLink(r.Context(), id)
+	userID := contextkeys.GetUserID(r.Context())
+	if userID == "" {
+		http.Error(w, `{"error":"unauthorized"}`, http.StatusUnauthorized)
+		return
+	}
+
+	token, err := h.service.CreateShareLink(r.Context(), id, userID)
 	if err != nil {
 		if err.Error() == "tracker not found" {
 			http.Error(w, `{"error":"tracker not found"}`, http.StatusNotFound)
+			return
+		}
+		if err.Error() == "forbidden" {
+			http.Error(w, `{"error":"forbidden"}`, http.StatusForbidden)
 			return
 		}
 		http.Error(w, `{"error":"failed to create share link"}`, http.StatusInternalServerError)
@@ -198,8 +208,22 @@ func (h *Handler) GetShareLink(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	share, err := h.service.GetShareLink(id)
+	userID := contextkeys.GetUserID(r.Context())
+	if userID == "" {
+		http.Error(w, `{"error":"unauthorized"}`, http.StatusUnauthorized)
+		return
+	}
+
+	share, err := h.service.GetShareLink(id, userID)
 	if err != nil {
+		if err.Error() == "tracker not found" {
+			http.Error(w, `{"error":"tracker not found"}`, http.StatusNotFound)
+			return
+		}
+		if err.Error() == "forbidden" {
+			http.Error(w, `{"error":"forbidden"}`, http.StatusForbidden)
+			return
+		}
 		http.Error(w, `{"error":"failed to fetch share link"}`, http.StatusInternalServerError)
 		return
 	}
@@ -226,7 +250,21 @@ func (h *Handler) DeleteShareLink(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if err := h.service.DeleteShareLink(r.Context(), id); err != nil {
+	userID := contextkeys.GetUserID(r.Context())
+	if userID == "" {
+		http.Error(w, `{"error":"unauthorized"}`, http.StatusUnauthorized)
+		return
+	}
+
+	if err := h.service.DeleteShareLink(r.Context(), id, userID); err != nil {
+		if err.Error() == "tracker not found" {
+			http.Error(w, `{"error":"tracker not found"}`, http.StatusNotFound)
+			return
+		}
+		if err.Error() == "forbidden" {
+			http.Error(w, `{"error":"forbidden"}`, http.StatusForbidden)
+			return
+		}
 		http.Error(w, `{"error":"share link not found"}`, http.StatusNotFound)
 		return
 	}
@@ -300,6 +338,7 @@ type QueueTracker struct {
 	ID             string  `json:"id"`
 	Keyword        string  `json:"keyword"`
 	ProcessingStep *string `json:"processing_step"`
+	RescrapeCount  int     `json:"rescrape_count"`
 }
 
 func (h *Handler) GetQueueStatus(w http.ResponseWriter, r *http.Request) {
@@ -326,7 +365,7 @@ func (h *Handler) GetQueueStatus(w http.ResponseWriter, r *http.Request) {
 	// Fetch processing trackers with keyword + step
 	var processingTrackers []QueueTracker
 	if len(processing) > 0 {
-		query = `SELECT id, keyword, processing_step FROM trackers WHERE status = 'PROCESSING' ORDER BY processing_started_at ASC`
+		query = `SELECT id, keyword, processing_step, rescrape_count FROM trackers WHERE status = 'PROCESSING' ORDER BY processing_started_at ASC`
 		if err := h.service.repo.db.Select(&processingTrackers, query); err != nil {
 			http.Error(w, `{"error":"failed"}`, http.StatusInternalServerError)
 			return

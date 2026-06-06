@@ -76,7 +76,7 @@ export default function SearchBar({ initialValue = "" }) {
   return (
     <div ref={wrapperRef} className="relative w-full z-50 text-left">
       {/* INPUT */}
-      <div className="flex items-center rounded-xl bg-[rgb(var(--card))] border border-[rgb(var(--border))] focus-within:border-[rgb(var(--accent))] transition-colors">
+      <div className="flex items-center rounded-lg bg-[rgb(var(--card))] border border-[rgb(var(--border))] focus-within:border-[rgb(var(--accent))] transition-colors shadow-[0_1px_2px_rgba(0,0,0,0.03)]">
         <div className="pl-4 text-[rgb(var(--muted))]">
           {loading ? (
             <Loader2 size={18} className="animate-spin" />
@@ -93,13 +93,13 @@ export default function SearchBar({ initialValue = "" }) {
             if (searchResult) setShowDropdown(true);
           }}
           placeholder="Search a product, e.g. RTX 4070, MacBook Air M2"
-          className="w-full bg-transparent px-3 py-3 sm:py-3.5 text-sm sm:text-base text-[rgb(var(--fg))] outline-none placeholder:text-[rgb(var(--muted))] placeholder:text-sm"
+          className="w-full bg-transparent px-3 py-[11px] text-sm sm:text-[15px] text-[rgb(var(--fg))] outline-none placeholder:text-[rgb(var(--muted-lighter))]"
         />
 
         <div className="pr-2">
           <button
             onClick={handleSearch}
-            className="px-4 py-2 rounded-lg text-sm font-medium bg-[rgb(var(--accent))] text-white hover:opacity-90 active:opacity-80 transition-opacity"
+            className="px-4 py-[7px] rounded-md text-sm font-medium bg-[rgb(var(--accent))] text-white hover:opacity-90 active:opacity-80 transition-opacity"
           >
             Search
           </button>
@@ -108,10 +108,10 @@ export default function SearchBar({ initialValue = "" }) {
 
       {/* DROPDOWN */}
       {showDropdown && searchResult && (
-        <div className="absolute top-[calc(100%+8px)] left-0 right-0 bg-[rgb(var(--card))] border border-[rgb(var(--border))] rounded-xl overflow-hidden shadow-sm">
+        <div className="absolute top-[calc(100%+6px)] left-0 right-0 bg-[rgb(var(--card))] border border-[rgb(var(--border))] rounded-lg overflow-hidden shadow-[0_4px_16px_rgba(0,0,0,0.06)]">
           {searchResult.results.length > 0 ? (
             <div>
-              <div className="px-4 py-2.5 border-b border-[rgb(var(--border))] text-xs font-medium text-[rgb(var(--muted))] uppercase tracking-wider">
+              <div className="px-4 py-2.5 border-b border-[rgb(var(--border))] text-[11px] font-medium text-[rgb(var(--muted))] uppercase tracking-[0.1em]">
                 Found in database
               </div>
               <ul className="max-h-[300px] overflow-y-auto custom-scrollbar">
@@ -122,19 +122,19 @@ export default function SearchBar({ initialValue = "" }) {
                   >
                     <button
                       onClick={() => router.push(`/trackers/${item.id}`)}
-                      className="w-full px-4 py-3 text-left hover:bg-[rgb(var(--bg))] transition-colors flex justify-between items-center group"
+                      className="w-full px-4 py-3 text-left hover:bg-[rgb(var(--card-hover))] transition-colors flex justify-between items-center group"
                     >
                       <div>
-                        <div className="font-medium text-[rgb(var(--fg))]">
+                        <div className="font-medium text-[13px] text-[rgb(var(--fg))]">
                           {item.keyword}
                         </div>
-                        <span className="text-xs text-[rgb(var(--muted))]">
+                        <span className="text-[11px] text-[rgb(var(--muted-lighter))]">
                           {item.status}
                         </span>
                       </div>
                       <ArrowRight
-                        size={16}
-                        className="text-[rgb(var(--muted))] group-hover:text-[rgb(var(--accent))] transition-colors"
+                        size={15}
+                        className="text-[rgb(var(--muted-lighter))] group-hover:text-[rgb(var(--accent))] transition-colors"
                       />
                     </button>
                   </li>
@@ -143,9 +143,9 @@ export default function SearchBar({ initialValue = "" }) {
               <div className="p-2 border-t border-[rgb(var(--border))] text-center">
                 <button
                   onClick={handleSearch}
-                  className="text-xs font-medium text-[rgb(var(--accent))] hover:underline"
+                  className="text-[11px] font-medium text-[rgb(var(--accent))] hover:underline"
                 >
-                  See all results
+                  See all results &rarr;
                 </button>
               </div>
             </div>
@@ -159,7 +159,7 @@ export default function SearchBar({ initialValue = "" }) {
               </p>
               <button
                 onClick={handleCreateNew}
-                className="inline-flex items-center gap-2 bg-[rgb(var(--accent))] text-white px-4 py-2 rounded-lg text-sm font-medium hover:opacity-90 transition-opacity"
+                className="inline-flex items-center gap-2 bg-[rgb(var(--accent))] text-white px-4 py-2 rounded-md text-sm font-medium hover:opacity-90 transition-opacity"
               >
                 <Plus size={16} />
                 Track this product

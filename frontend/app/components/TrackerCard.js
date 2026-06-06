@@ -1,191 +1,55 @@
 import Link from "next/link";
-import {
-  Eye,
-  AlertTriangle,
-  Loader2,
-  Clock,
-  ArrowUpRight,
-  ArrowDownRight,
-  Minus,
-} from "lucide-react";
-import LoveButton from "./LoveButton";
+import { Loader2, Clock, AlertTriangle } from "lucide-react";
 
-export default function TrackerCard({ tracker, onWatchlistChange }) {
+export default function TrackerCard({ tracker }) {
   const {
     id = "",
     keyword = "Unknown item",
     status = "PENDING",
     created_at,
-    view_count = 0,
     error_count = 0,
-    user_name,
-    latest_price,
-    previous_price,
-    latest_price_source,
-    price_log_count = 0,
   } = tracker || {};
-
-  const hasPrice = latest_price != null;
-
-  const priceChange = hasPrice && previous_price != null
-    ? latest_price - previous_price
-    : null;
-  const priceChangePct = hasPrice && previous_price != null && previous_price > 0
-    ? ((latest_price - previous_price) / previous_price) * 100
-    : null;
 
   const formattedDate = created_at
     ? new Date(created_at).toLocaleDateString("en-US", {
         day: "numeric",
         month: "short",
-        year: "numeric",
       })
-    : "-";
+    : "";
 
-  const getStatusConfig = (s) => {
+  const getStatusLabel = (s) => {
     switch (s) {
-      case "READY":
-        return {
-          style: "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400",
-          icon: null,
-          label: "Ready",
-        };
-      case "PROCESSING":
-        return {
-          style: "bg-blue-500/10 text-blue-600 dark:text-blue-400",
-          icon: <Loader2 size={12} className="animate-spin mr-1" />,
-          label: "Processing",
-        };
-      case "PENDING":
-        return {
-          style: "bg-amber-500/10 text-amber-600 dark:text-amber-400",
-          icon: <Clock size={12} className="mr-1" />,
-          label: "Pending",
-        };
-      case "ERROR":
-        return {
-          style: "bg-red-500/10 text-red-600 dark:text-red-400",
-          icon: <AlertTriangle size={12} className="mr-1" />,
-          label: "Error",
-        };
-      default:
-        return {
-          style: "bg-zinc-500/10 text-zinc-600 dark:text-zinc-400",
-          icon: null,
-          label: s,
-        };
+      case "PROCESSING": return { icon: <Loader2 size={11} className="animate-spin" />, text: "Processing", cls: "text-blue-500" };
+      case "PENDING": return { icon: <Clock size={11} />, text: "Queued", cls: "text-[rgb(var(--warning))]" };
+      case "ERROR": return { icon: <AlertTriangle size={11} />, text: "Error", cls: "text-[rgb(var(--danger))]" };
+      default: return { icon: null, text: s, cls: "text-[rgb(var(--muted))]" };
     }
   };
 
-  const statusConfig = getStatusConfig(status);
-
-  const formatChange = (val) =>
-    new Intl.NumberFormat("en-US", {
-      style: "currency",
-      currency: "USD",
-      signDisplay: "always",
-    }).format(val);
-
-  const formatPct = (val) =>
-    `${val >= 0 ? "+" : ""}${val.toFixed(1)}%`;
+  const cfg = getStatusLabel(status);
 
   return (
-    <Link href={`/trackers/${id}`} className="group block h-full no-underline">
-      <div className="h-full flex flex-col bg-[rgb(var(--card))] border border-[rgb(var(--border))] rounded-xl p-5 transition-all hover:border-[rgb(var(--accent))]/50 hover:shadow-sm">
-        {/* HEADER */}
-        <div className="flex items-center justify-between mb-4">
-          <div className="flex items-center gap-2">
-            <span className="text-xs text-[rgb(var(--muted))]">{formattedDate}</span>
-            {user_name && (
-              <span className="text-xs font-medium text-[rgb(var(--accent))]">
-                @{user_name}
+    <Link href={`/trackers/${id}`} className="group block no-underline">
+      <div className="border border-[rgb(var(--border))] rounded-md px-4 py-3 hover:border-[rgb(var(--accent))]/30 transition-colors">
+        <div className="flex items-center justify-between gap-3">
+          <div className="flex-1 min-w-0">
+            <h3 className="text-[13px] font-medium text-[rgb(var(--fg))] group-hover:text-[rgb(var(--accent))] transition-colors truncate">
+              {keyword}
+            </h3>
+            <div className="flex items-center gap-2 mt-1">
+              <span className={`flex items-center gap-1 text-[10px] font-medium ${cfg.cls}`}>
+                {cfg.icon}
+                {cfg.text}
               </span>
-            )}
-          </div>
-          <div className="flex items-center gap-1.5">
-            <span
-            className={`flex items-center px-2 py-0.5 rounded-full text-xs font-medium tracking-wide uppercase ${statusConfig.style}`}
-          >
-            {statusConfig.icon}
-            {statusConfig.label}
-          </span>
-            </div>
-        </div>
-
-        {/* BODY */}
-        <div className="mb-5 flex-grow">
-          <h2 className="text-base font-semibold text-[rgb(var(--fg))] leading-snug group-hover:text-[rgb(var(--accent))] transition-colors line-clamp-2">
-            {keyword}
-          </h2>
-
-          <div className="mt-3">
-            {hasPrice ? (
-              <div>
-                <span className="text-2xl font-semibold text-[rgb(var(--fg))] tracking-tight tabular-nums">
-                  {new Intl.NumberFormat("en-US", {
-                    style: "currency",
-                    currency: "USD",
-                  }).format(latest_price)}
-                </span>
-                {priceChange !== null && priceChangePct !== null && (
-                  <div className="flex items-center gap-1.5 mt-1.5">
-                    {priceChange > 0 ? (
-                      <ArrowUpRight size={13} className="text-emerald-500" />
-                    ) : priceChange < 0 ? (
-                      <ArrowDownRight size={13} className="text-red-500" />
-                    ) : (
-                      <Minus size={13} className="text-[rgb(var(--muted))]" />
-                    )}
-                    <span
-                      className={`text-xs font-medium tabular-nums ${
-                        priceChange > 0
-                          ? "text-emerald-500"
-                          : priceChange < 0
-                            ? "text-red-500"
-                            : "text-[rgb(var(--muted))]"
-                      }`}
-                    >
-                      {formatChange(priceChange)} ({formatPct(priceChangePct)})
-                    </span>
-                  </div>
-                )}
-              </div>
-            ) : (
-              <span className="text-xs text-[rgb(var(--muted))]">
-                {status === "PROCESSING"
-                  ? "Fetching data…"
-                  : "Awaiting price data"}
-              </span>
-            )}
-          </div>
-        </div>
-
-        {/* FOOTER */}
-        <div className="pt-4 border-t border-[rgb(var(--border))]">
-          <div className="flex items-center justify-between text-xs text-[rgb(var(--muted))]">
-            <div className="flex items-center gap-3">
-              <span className="flex items-center gap-1">
-                <Eye size={13} />
-                {view_count}
-              </span>
-              {error_count > 0 && status !== "ERROR" && (
-                <span
-                  className="flex items-center gap-1 text-amber-600 dark:text-amber-400"
-                  title="Previously errored"
-                >
-                  <AlertTriangle size={13} />
-                  {error_count}
-                </span>
+              <span className="text-[10px] text-[rgb(var(--muted-lighter))]">{formattedDate}</span>
+              {error_count > 0 && (
+                <span className="text-[10px] text-[rgb(var(--warning))]">{error_count} err</span>
               )}
             </div>
-            <div className="flex items-center gap-1.5">
-              <LoveButton trackerId={id} size={16} />
-              <ArrowUpRight
-                size={16}
-                className="text-[rgb(var(--muted))] group-hover:text-[rgb(var(--accent))] transition-colors"
-              />
-            </div>
           </div>
+          <span className="text-[10px] text-[rgb(var(--muted-lighter))]">
+            {status === "PROCESSING" ? "Fetching data…" : "Awaiting first scrape"}
+          </span>
         </div>
       </div>
     </Link>

@@ -1,36 +1,80 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useAuth } from "../lib/AuthContext";
 
 const API_BASE = process.env.NEXT_PUBLIC_API_BASE || "/api";
 
-export default function LoveButton({ trackerId, size = 18, className = "" }) {
+export default function LoveButton({ trackerId, size = 18, className = "", onWatchlistChange }) {
   const { user } = useAuth();
   const [watched, setWatched] = useState(false);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true); // start as loading
   const [hover, setHover] = useState(false);
 
-  const token = typeof window !== "undefined" ? localStorage.getItem("pricelyt_token") : null;
+  // Fetch initial watch status from API
+  useEffect(() => {
+    if (!user) {
+      setLoading(false);
+      return;
+    }
+    const token = localStorage.getItem("pricelyt_token");
+    if (!token) {
+      setLoading(false);
+      return;
+    }
+
+    let cancelled = false;
+    fetch(`${API_BASE}/watchlist/${trackerId}/status`, {
+      headers: { Authorization: `Bearer ${token}` },
+      cache: "no-store",
+    })
+      .then((res) => {
+        if (res.ok) return res.json();
+        return null;
+      })
+      .then((data) => {
+        if (!cancelled && data) {
+          setWatched(!!data.watched);
+        }
+      })
+      .catch(() => {})
+      .finally(() => {
+        if (!cancelled) setLoading(false);
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [user, trackerId]);
 
   async function toggle(e) {
     e.preventDefault();
     e.stopPropagation();
     if (!user || loading) return;
+
+    const token = localStorage.getItem("pricelyt_token");
+    if (!token) return;
+
     setLoading(true);
     try {
       if (watched) {
-        await fetch(`${API_BASE}/watchlist/${trackerId}`, {
+        const res = await fetch(`${API_BASE}/watchlist/${trackerId}`, {
           method: "DELETE",
           headers: { Authorization: `Bearer ${token}` },
         });
-        setWatched(false);
+        if (res.ok) {
+          setWatched(false);
+          if (onWatchlistChange) onWatchlistChange(trackerId, false);
+        }
       } else {
-        await fetch(`${API_BASE}/watchlist/${trackerId}`, {
+        const res = await fetch(`${API_BASE}/watchlist/${trackerId}`, {
           method: "POST",
           headers: { Authorization: `Bearer ${token}` },
         });
-        setWatched(true);
+        if (res.ok) {
+          setWatched(true);
+          if (onWatchlistChange) onWatchlistChange(trackerId, true);
+        }
       }
     } catch {
       // silent
@@ -39,7 +83,7 @@ export default function LoveButton({ trackerId, size = 18, className = "" }) {
     }
   }
 
-  // Not logged in — show ghost heart, click triggers nothing but looks inviting
+  // Not logged in — show ghost heart
   if (!user) {
     return (
       <button
